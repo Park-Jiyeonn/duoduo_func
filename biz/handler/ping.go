@@ -10,7 +10,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
-// http://127.0.0.1:8888/ping
 // Ping .
 func Ping(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, utils.H{
