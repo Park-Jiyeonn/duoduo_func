@@ -10,9 +10,9 @@ import (
 )
 
 type PublishRequest struct {
-	Data   []byte `thrift:"data,1" form:"data" json:"data" query:"data"`
-	UserID int64  `thrift:"user_id,2" form:"user_id" json:"user_id" query:"user_id"`
-	Title  string `thrift:"title,3" form:"title" json:"title" query:"title"`
+	Data  []byte `thrift:"data,1" form:"data" json:"data" query:"data"`
+	Token int64  `thrift:"token,2" form:"token" json:"token" query:"token"`
+	Title string `thrift:"title,3" form:"title" json:"title" query:"title"`
 }
 
 func NewPublishRequest() *PublishRequest {
@@ -23,8 +23,8 @@ func (p *PublishRequest) GetData() (v []byte) {
 	return p.Data
 }
 
-func (p *PublishRequest) GetUserID() (v int64) {
-	return p.UserID
+func (p *PublishRequest) GetToken() (v int64) {
+	return p.Token
 }
 
 func (p *PublishRequest) GetTitle() (v string) {
@@ -33,7 +33,7 @@ func (p *PublishRequest) GetTitle() (v string) {
 
 var fieldIDToName_PublishRequest = map[int16]string{
 	1: "data",
-	2: "user_id",
+	2: "token",
 	3: "title",
 }
 
@@ -129,7 +129,7 @@ func (p *PublishRequest) ReadField2(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.UserID = v
+		p.Token = v
 	}
 	return nil
 }
@@ -198,10 +198,10 @@ WriteFieldEndError:
 }
 
 func (p *PublishRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("user_id", thrift.I64, 2); err != nil {
+	if err = oprot.WriteFieldBegin("token", thrift.I64, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI64(p.UserID); err != nil {
+	if err := oprot.WriteI64(p.Token); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {

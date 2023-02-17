@@ -4,7 +4,7 @@ include "feed.thrift"
 
 struct PublishRequest {
     1: binary data
-    2: i64 user_id
+    2: i64 token
     3: string title
 }
 

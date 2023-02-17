@@ -17,6 +17,8 @@ _testmain.go
 *.prof
 *.rar
 *.zip
+*.mp4
+*.jpeg
 *.gz
 *.psd
 *.bmd

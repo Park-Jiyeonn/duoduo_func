@@ -4,6 +4,8 @@ package publish
 
 import (
 	"context"
+	"simple_tiktok/biz/dal"
+	"simple_tiktok/pojo"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -13,16 +15,50 @@ import (
 // PublishAction .
 // @router /douyin/publish/action/ [POST]
 func PublishAction(ctx context.Context, c *app.RequestContext) {
-	var err error
 	var req publish.PublishRequest
-	err = c.BindAndValidate(&req)
-	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+	req.Title = c.PostForm("title")
+
+	resp := new(publish.PublishResponse)
+	message := ""
+	resp.StatusMsg = &message
+	username, exists := c.Get("user_name")
+	if !exists {
+		resp.StatusCode = 1
+		message = "解析Token失败，没有Token解析的信息"
+		c.JSON(consts.StatusBadRequest, resp)
 		return
 	}
 
-	resp := new(publish.PublishResponse)
-	
+	file, err := c.FormFile("data")
+	//fmt.Println(file)
+	if err != nil {
+		resp.StatusCode = 1
+		message = "文件上传失败"
+		c.JSON(consts.StatusBadRequest, resp)
+		return
+	}
+
+	vedio := pojo.Video{
+		UserName:  username.(string),
+		Title:     req.Title,
+		VideoPath: "data/" + req.Title + ".mp4",
+	}
+	if err := c.SaveUploadedFile(file, vedio.VideoPath); err != nil {
+		resp.StatusCode = 1
+		message = "保存文件失败"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+	// 执行数据库事务
+	if err := dal.CreateVedio(&vedio); err != nil {
+		resp.StatusCode = 1
+		message = "数据库寄寄"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+
+	resp.StatusCode = 0
+	message = "success"
 	c.JSON(consts.StatusOK, resp)
 }
 

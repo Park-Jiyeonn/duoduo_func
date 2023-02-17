@@ -2,6 +2,7 @@ package dal
 
 import (
 	"gorm.io/gorm"
+	"simple_tiktok/pojo"
 )
 
 import (
@@ -23,5 +24,5 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	//DB.AutoMigrate(&pojo.User{})
+	DB.AutoMigrate(&pojo.User{}, &pojo.Video{})
 }

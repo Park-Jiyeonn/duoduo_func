@@ -17,7 +17,7 @@ func GetToken(username string) (string, error) {
 	claims := MyClaims{
 		username,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 60).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
 			Issuer:    "朴智妍",
 		},
 	}

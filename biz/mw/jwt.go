@@ -14,13 +14,20 @@ func JwtMiddleware() app.HandlerFunc {
 		fmt.Println("中间件被使用了吗？")
 		token := c.Query("token")
 		if token == "" {
-			c.Abort()
+			token = c.PostForm("token")
+			// 未携带Token
+			if token == "" {
+				c.Abort()
+			}
 		}
 		claim, err := util.ParseToken(token)
-		if err != nil {
+		if err != nil || claim == nil {
 			c.Abort()
+		} else {
+			c.Set("user_name", claim.Username)
+			fmt.Println(claim)
+			//fmt.Println(token)
+			c.Next(ctx)
 		}
-		c.Set("user_name", claim.Username)
-		c.Next(ctx)
 	}
 }
