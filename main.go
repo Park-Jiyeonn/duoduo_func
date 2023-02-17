@@ -11,6 +11,8 @@ func main() {
 	dal.Init()
 	h := server.Default()
 
+	h.Static("", "C:/Users/ATXTKS/Pictures")
+
 	register(h)
 	h.Spin()
 }

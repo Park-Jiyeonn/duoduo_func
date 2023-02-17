@@ -4,12 +4,14 @@ package publish
 
 import (
 	"context"
-	"simple_tiktok/biz/dal"
-	"simple_tiktok/pojo"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"simple_tiktok/biz/dal"
+	"simple_tiktok/biz/model/feed"
 	"simple_tiktok/biz/model/publish"
+	"simple_tiktok/biz/model/user"
+	"simple_tiktok/pojo"
+	"simple_tiktok/util"
 )
 
 // PublishAction .
@@ -38,19 +40,26 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	vedio := pojo.Video{
+	video := pojo.Video{
 		UserName:  username.(string),
 		Title:     req.Title,
 		VideoPath: "data/" + req.Title + ".mp4",
+		CoverPath: "data/" + req.Title + ".jpg",
 	}
-	if err := c.SaveUploadedFile(file, vedio.VideoPath); err != nil {
+	if err := c.SaveUploadedFile(file, video.VideoPath); err != nil {
 		resp.StatusCode = 1
 		message = "保存文件失败"
 		c.JSON(consts.StatusInternalServerError, resp)
 		return
 	}
+	if err := util.Cover(video.VideoPath, video.CoverPath); err != nil {
+		resp.StatusCode = 1
+		message = "获取视频封面失败"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
 	// 执行数据库事务
-	if err := dal.CreateVedio(&vedio); err != nil {
+	if err := dal.CreateVedio(&video); err != nil {
 		resp.StatusCode = 1
 		message = "数据库寄寄"
 		c.JSON(consts.StatusInternalServerError, resp)
@@ -74,6 +83,63 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(publish.PublishListResponse)
+	message := ""
+	resp.StatusMsg = &message
+	username, exists := c.Get("user_name")
+	if !exists {
+		resp.StatusCode = 1
+		message = "解析Token失败，没有Token解析的信息"
+		c.JSON(consts.StatusBadRequest, resp)
+		return
+	}
 
+	videos, err := dal.FindVideoByName(username.(string))
+	if err != nil {
+		resp.StatusCode = 1
+		message = "没找到视频相关信息，寄"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+
+	resp.StatusCode = 0
+	users, err := dal.FindUserByName(username.(string))
+	if err != nil {
+		resp.StatusCode = 1
+		message = "没找到用户相关信息，寄"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+	if len(users) > 1 {
+		resp.StatusCode = 1
+		message = "找到的用户太多，寄"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+
+	// 假设你有一个名为videoSlice的存储了多个VideoInfo的切片
+
+	var videoList []*feed.VideoInfo
+	for _, v := range videos {
+		//fmt.Println(v.CoverPath)
+		video := &feed.VideoInfo{
+			ID: int64(v.ID),
+			Author: &user.UserInfo{
+				ID:            int64(users[0].ID),
+				Name:          users[0].UserName,
+				FollowerCount: 0,
+				IsFollow:      false,
+			},
+			PlayURL:       v.VideoPath,
+			CoverURL:      "27.jpeg",
+			FavoriteCount: 99,
+			CommentCount:  0,
+			IsFavorite:    false,
+			Title:         v.Title,
+		}
+		videoList = append(videoList, video)
+	}
+
+	resp.VideoList = videoList
+	message = "success"
 	c.JSON(consts.StatusOK, resp)
 }
