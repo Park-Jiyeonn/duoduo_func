@@ -11,7 +11,7 @@ func main() {
 	dal.Init()
 	h := server.Default()
 
-	h.Static("", "./data/")
+	h.Static("/data/", ".")
 
 	register(h)
 	h.Spin()

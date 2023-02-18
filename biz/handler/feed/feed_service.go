@@ -4,7 +4,10 @@ package feed
 
 import (
 	"context"
+	"net/http"
+	"simple_tiktok/biz/dal"
 	feed "simple_tiktok/biz/model/feed"
+	"simple_tiktok/biz/model/user"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -22,6 +25,44 @@ func GetVideoList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(feed.FeedResponse)
+	message := ""
+	nextTime := int64(114514)
+	resp.StatusMsg = &message
+	resp.NextTime = &nextTime
 
+	videos, err := dal.FindVideoAll()
+	if err != nil {
+		message = "数据库查询失败"
+		resp.StatusCode = 1
+		c.JSON(http.StatusBadRequest, resp)
+		return
+	}
+
+	// 假设你有一个名为videoSlice的存储了多个VideoInfo的切片
+
+	var videoList []*feed.VideoInfo
+	for _, v := range videos {
+		//fmt.Println(v.CoverPath)
+		users, _ := dal.FindUserByName(v.UserName)
+		video := &feed.VideoInfo{
+			ID: int64(v.ID),
+			Author: &user.UserInfo{
+				ID:            int64(users[0].ID),
+				Name:          v.UserName,
+				FollowerCount: 0,
+				IsFollow:      false,
+			},
+			PlayURL:       "http://192.168.137.1:8888/data/" + v.VideoPath,
+			CoverURL:      "http://192.168.137.1:8888/data/" + v.CoverPath,
+			FavoriteCount: 99,
+			CommentCount:  0,
+			IsFavorite:    false,
+			Title:         v.Title,
+		}
+		videoList = append(videoList, video)
+	}
+
+	resp.VideoList = videoList
+	message = "success"
 	c.JSON(consts.StatusOK, resp)
 }
