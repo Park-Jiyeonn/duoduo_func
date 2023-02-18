@@ -43,16 +43,16 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 	video := pojo.Video{
 		UserName:  username.(string),
 		Title:     req.Title,
-		VideoPath: "data/" + req.Title + ".mp4",
-		CoverPath: "data/" + req.Title + ".jpg",
+		VideoPath: req.Title + ".mp4",
+		CoverPath: req.Title + ".jpg",
 	}
-	if err := c.SaveUploadedFile(file, video.VideoPath); err != nil {
+	if err := c.SaveUploadedFile(file, "./data/"+video.VideoPath); err != nil {
 		resp.StatusCode = 1
 		message = "保存文件失败"
 		c.JSON(consts.StatusInternalServerError, resp)
 		return
 	}
-	if err := util.Cover(video.VideoPath, video.CoverPath); err != nil {
+	if err := util.Cover("./data/"+video.VideoPath, "./data/"+video.CoverPath); err != nil {
 		resp.StatusCode = 1
 		message = "获取视频封面失败"
 		c.JSON(consts.StatusInternalServerError, resp)
@@ -129,8 +129,8 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 				FollowerCount: 0,
 				IsFollow:      false,
 			},
-			PlayURL:       v.VideoPath,
-			CoverURL:      "27.jpeg",
+			PlayURL:       "http://192.168.137.1:8888/" + v.VideoPath,
+			CoverURL:      "http://192.168.137.1:8888/" + v.CoverPath,
 			FavoriteCount: 99,
 			CommentCount:  0,
 			IsFavorite:    false,
