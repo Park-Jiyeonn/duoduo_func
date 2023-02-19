@@ -20,8 +20,10 @@ func JwtMiddleware() app.HandlerFunc {
 				c.Abort()
 			}
 		}
+		fmt.Println("token = ", token)
 		claim, err := util.ParseToken(token)
 		if err != nil || claim == nil {
+			fmt.Println("这个token没搞对")
 			c.Abort()
 		} else {
 			c.Set("user_name", claim.Username)

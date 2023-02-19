@@ -5,10 +5,12 @@ package main
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"simple_tiktok/biz/dal"
+	"simple_tiktok/biz/redis"
 )
 
 func main() {
 	dal.Init()
+	redis.InitRedis()
 	h := server.Default()
 
 	h.Static("/data/", ".")

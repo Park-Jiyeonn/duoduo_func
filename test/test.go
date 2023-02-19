@@ -1,40 +1,105 @@
-package main
+package redis
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis"
+
+	"github.com/go-redis/redis/v8"
 )
 
-func main() {
-	// 创建Redis客户端
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Redis服务器地址
-		Password: "",               // Redis密码，如果没有则留空
-		DB:       0,                // Redis数据库索引（0表示默认数据库）
+type RedisClient struct {
+	client *redis.Client
+	ctx    context.Context
+}
+
+type LikeInfo struct {
+	VideoID  int64 `json:"video_id"`
+	UserID   int64 `json:"user_id"`
+	LikeTime int64 `json:"like_time"`
+}
+
+func NewRedisClient() *RedisClient {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
 	})
 
-	// 检查Redis连接是否正常
-	_, err := client.Ping().Result()
+	return &RedisClient{rdb, context.Background()}
+}
+
+func (c *RedisClient) Close() {
+	c.client.Close()
+}
+
+func (c *RedisClient) GetLikeInfo(videoID, userID int64) (*LikeInfo, error) {
+	key := fmt.Sprintf("like:%d:%d", videoID, userID)
+	result, err := c.client.Get(c.ctx, key).Bytes()
 	if err != nil {
-		panic(err)
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	// 在Redis中设置一个键值对
-	err = client.Set("T-ara", "Park.Jiyeon", 0).Err()
-	if err != nil {
-		panic(err)
+	likeInfo := &LikeInfo{}
+	if err := json.Unmarshal(result, likeInfo); err != nil {
+		return nil, err
 	}
 
-	// 从Redis中获取一个键值对
-	val, err := client.Get("T-ara").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("T-ara:", val)
+	return likeInfo, nil
+}
 
-	// 关闭Redis客户端
-	err = client.Close()
+func (c *RedisClient) GetLikeCount(videoID int64) (int64, error) {
+	key := fmt.Sprintf("like:count:%d", videoID)
+	result, err := c.client.Get(c.ctx, key).Int64()
 	if err != nil {
-		panic(err)
+		if err == redis.Nil {
+			return 0, nil
+		}
+		return 0, err
 	}
+
+	return result, nil
+}
+
+func (c *RedisClient) IncrLikeCount(videoID int64) error {
+	key := fmt.Sprintf("like:count:%d", videoID)
+	_, err := c.client.Incr(c.ctx, key).Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *RedisClient) DecrLikeCount(videoID int64) error {
+	key := fmt.Sprintf("like:count:%d", videoID)
+	_, err := c.client.Decr(c.ctx, key).Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *RedisClient) SetLikeInfo(videoID, userID, likeTime int64) error {
+	key := fmt.Sprintf("like:%d:%d", videoID, userID)
+	likeInfo := &LikeInfo{
+		VideoID:  videoID,
+		UserID:   userID,
+		LikeTime: likeTime,
+	}
+	value, err := json.Marshal(likeInfo)
+	if err != nil {
+		return err
+	}
+
+	err = c.client.Set(c.ctx, key, value, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
