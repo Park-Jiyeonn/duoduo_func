@@ -10,8 +10,10 @@ import (
 	"simple_tiktok/biz/model/feed"
 	"simple_tiktok/biz/model/publish"
 	"simple_tiktok/biz/model/user"
+	"simple_tiktok/biz/redis"
 	"simple_tiktok/pojo"
 	"simple_tiktok/util"
+	"strconv"
 )
 
 // PublishAction .
@@ -62,6 +64,14 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 	if err := dal.CreateVedio(&video); err != nil {
 		resp.StatusCode = 1
 		message = "数据库寄寄"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+
+	err = redis.InitLikeCount(int64(video.ID))
+	if err != nil {
+		resp.StatusCode = 1
+		message = "redis寄寄"
 		c.JSON(consts.StatusInternalServerError, resp)
 		return
 	}
@@ -121,6 +131,26 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 	var videoList []*feed.VideoInfo
 	for _, v := range videos {
 		//fmt.Println(v.CoverPath)
+		like, err := redis.GetLikeCount(int64(v.ID))
+		if err != nil {
+			resp.StatusCode = 1
+			message = "redis，寄"
+			c.JSON(consts.StatusInternalServerError, resp)
+		}
+		likeInfo, err := redis.GetLikeInfo(strconv.Itoa(int(v.ID)), strconv.Itoa(int(users[0].ID)))
+		if err != nil {
+			resp.StatusCode = 1
+			message = "Redis查询是否点赞信息出错"
+			c.JSON(consts.StatusBadRequest, resp)
+			return
+		}
+
+		var isLike bool
+		if likeInfo == nil {
+			isLike = false
+		} else {
+			isLike = true
+		}
 		video := &feed.VideoInfo{
 			ID: int64(v.ID),
 			Author: &user.UserInfo{
@@ -131,9 +161,9 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 			},
 			PlayURL:       "http://192.168.137.1:8888/data/" + v.VideoPath,
 			CoverURL:      "http://192.168.137.1:8888/data/" + v.CoverPath,
-			FavoriteCount: 99,
+			FavoriteCount: like,
 			CommentCount:  0,
-			IsFavorite:    false,
+			IsFavorite:    isLike,
 			Title:         v.Title,
 		}
 		videoList = append(videoList, video)

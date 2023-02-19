@@ -7,7 +7,11 @@ import (
 	"fmt"
 	"simple_tiktok/biz/dal"
 	"simple_tiktok/biz/model/favorite"
+	"simple_tiktok/biz/model/feed"
+	"simple_tiktok/biz/model/user"
 	"simple_tiktok/biz/redis"
+	"strconv"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -41,7 +45,7 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusBadRequest, resp)
 	}
 
-	likeInfo, err := redis.GetLikeInfo(req.VideoID, string(users[0].ID))
+	likeInfo, err := redis.GetLikeInfo(req.VideoID, strconv.Itoa(int(users[0].ID)))
 	if err != nil {
 		resp.StatusCode = 1
 		fmt.Println("Redis查询是否点赞信息出错")
@@ -49,7 +53,14 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	if likeInfo == nil {
-		err := redis.IncrLikeCount(req.VideoID)
+		err := redis.SetLikeInfo(req.VideoID, strconv.Itoa(int(users[0].ID)), time.Now().String())
+		if err != nil {
+			resp.StatusCode = 1
+			fmt.Println("Redis初始化点赞信息出错")
+			c.JSON(consts.StatusBadRequest, resp)
+			return
+		}
+		err = redis.IncrLikeCount(req.VideoID)
 		if err != nil {
 			resp.StatusCode = 1
 			fmt.Println("赞操作失败")
@@ -61,6 +72,13 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 		if err != nil {
 			resp.StatusCode = 1
 			fmt.Println("取消赞操作失败")
+			c.JSON(consts.StatusBadRequest, resp)
+			return
+		}
+		err = redis.DelLikeInfo(req.VideoID, strconv.Itoa(int(users[0].ID)))
+		if err != nil {
+			resp.StatusCode = 1
+			fmt.Println("删除赞操作失败")
 			c.JSON(consts.StatusBadRequest, resp)
 			return
 		}
@@ -83,6 +101,64 @@ func GetLikeList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(favorite.LikeListResponse)
+	message := ""
+	resp.StatusMsg = &message
+	videos, err := redis.GetLikedVideos(req.UserID)
+	if err != nil {
+		resp.StatusCode = 1
+		message = "redis查点赞过的列表，寄"
+		c.JSON(consts.StatusInternalServerError, resp)
+		return
+	}
+	//fmt.Println(videos)
 
+	var videoList []*feed.VideoInfo
+	for _, v := range videos {
+		//fmt.Println(v.CoverPath)
+		like, err := redis.GetLikeCount(v)
+		if err != nil {
+			resp.StatusCode = 1
+			message = "redis，寄"
+			c.JSON(consts.StatusInternalServerError, resp)
+			return
+		}
+
+		theVideo, err := dal.FindVideoByID(v)
+		if err != nil {
+			resp.StatusCode = 1
+			message = "没查到这个视频" + strconv.FormatInt(v, 10)
+			c.JSON(consts.StatusInternalServerError, resp)
+			return
+		}
+
+		users, err := dal.FindUserByName(theVideo.UserName)
+		if err != nil {
+			resp.StatusCode = 1
+			message = "没查到这个作者" + theVideo.UserName
+			c.JSON(consts.StatusInternalServerError, resp)
+			return
+		}
+
+		video := &feed.VideoInfo{
+			ID: int64(v),
+			Author: &user.UserInfo{
+				ID:            int64(users[0].ID),
+				Name:          users[0].UserName,
+				FollowerCount: 0,
+				IsFollow:      false,
+			},
+			PlayURL:       "http://192.168.137.1:8888/data/" + theVideo.VideoPath,
+			CoverURL:      "http://192.168.137.1:8888/data/" + theVideo.CoverPath,
+			FavoriteCount: like,
+			CommentCount:  0,
+			IsFavorite:    true,
+			Title:         theVideo.Title,
+		}
+		videoList = append(videoList, video)
+	}
+	//fmt.Println(videoList)
+	resp.VideoList = videoList
+	resp.StatusCode = 0
+	message = "success"
 	c.JSON(consts.StatusOK, resp)
 }

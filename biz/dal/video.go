@@ -16,3 +16,9 @@ func FindVideoAll() ([]*pojo.Video, error) {
 	err := DB.Find(&res).Error
 	return res, err
 }
+
+func FindVideoByID(VideoID int64) (*pojo.Video, error) {
+	var res *pojo.Video
+	err := DB.Where("id=?", VideoID).Find(&res).Error
+	return res, err
+}

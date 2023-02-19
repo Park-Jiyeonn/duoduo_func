@@ -422,8 +422,8 @@ func (p *LikeResponse) String() string {
 }
 
 type LikeListRequest struct {
-	UserID  int64 `thrift:"user_id,1" form:"user_id" json:"user_id" query:"user_id"`
-	QueryID int64 `thrift:"query_id,2" form:"query_id" json:"query_id" query:"query_id"`
+	UserID int64  `thrift:"user_id,1" form:"user_id" json:"user_id" query:"user_id"`
+	Token  string `thrift:"token,2" form:"token" json:"token" query:"token"`
 }
 
 func NewLikeListRequest() *LikeListRequest {
@@ -434,13 +434,13 @@ func (p *LikeListRequest) GetUserID() (v int64) {
 	return p.UserID
 }
 
-func (p *LikeListRequest) GetQueryID() (v int64) {
-	return p.QueryID
+func (p *LikeListRequest) GetToken() (v string) {
+	return p.Token
 }
 
 var fieldIDToName_LikeListRequest = map[int16]string{
 	1: "user_id",
-	2: "query_id",
+	2: "token",
 }
 
 func (p *LikeListRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -473,7 +473,7 @@ func (p *LikeListRequest) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 2:
-			if fieldTypeId == thrift.I64 {
+			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -522,10 +522,10 @@ func (p *LikeListRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *LikeListRequest) ReadField2(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadI64(); err != nil {
+	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
-		p.QueryID = v
+		p.Token = v
 	}
 	return nil
 }
@@ -581,10 +581,10 @@ WriteFieldEndError:
 }
 
 func (p *LikeListRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("query_id", thrift.I64, 2); err != nil {
+	if err = oprot.WriteFieldBegin("token", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI64(p.QueryID); err != nil {
+	if err := oprot.WriteString(p.Token); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {

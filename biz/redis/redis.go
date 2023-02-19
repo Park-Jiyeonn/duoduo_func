@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"strconv"
+	"strings"
 )
 
 type LikeInfo struct {
-	VideoID  int64 `json:"video_id"`
-	UserID   int64 `json:"user_id"`
-	LikeTime int64 `json:"like_time"`
+	VideoID  string `json:"video_id"`
+	UserID   string `json:"user_id"`
+	LikeTime string `json:"like_time"`
 }
 
 func GetLikeInfo(videoID, userID string) (*LikeInfo, error) {
@@ -29,6 +31,44 @@ func GetLikeInfo(videoID, userID string) (*LikeInfo, error) {
 	}
 
 	return likeInfo, nil
+}
+
+// GetLikedVideos 查询用户点赞过的视频
+func GetLikedVideos(userID int64) ([]int64, error) {
+	var likedVideos []int64
+	cursor := uint64(0)
+	pattern := fmt.Sprintf("like:*:%d", userID)
+
+	for {
+		// 扫描 redis 中所有匹配 pattern 的键
+		keys, nextCursor, err := Rs.Scan(context.Background(), cursor, pattern, 10).Result()
+		if err != nil {
+			return nil, err
+		}
+
+		// 遍历匹配的键，取出视频 ID
+		for _, key := range keys {
+			parts := strings.Split(key, ":")
+			if len(parts) != 3 {
+				continue
+			}
+			videoIDStr := parts[1]
+			videoID, err := strconv.ParseInt(videoIDStr, 10, 64)
+			if err != nil {
+				continue
+			}
+			likedVideos = append(likedVideos, videoID)
+		}
+
+		// 如果 nextCursor 返回 0，说明遍历完成
+		if nextCursor == 0 {
+			break
+		}
+
+		cursor = nextCursor
+	}
+
+	return likedVideos, nil
 }
 
 func GetLikeCount(videoID int64) (int64, error) {
@@ -64,8 +104,8 @@ func DecrLikeCount(videoID string) error {
 	return nil
 }
 
-func SetLikeInfo(videoID, userID, likeTime int64) error {
-	key := fmt.Sprintf("like:%d:%d", videoID, userID)
+func SetLikeInfo(videoID, userID, likeTime string) error {
+	key := fmt.Sprintf("like:%s:%s", videoID, userID)
 	likeInfo := &LikeInfo{
 		VideoID:  videoID,
 		UserID:   userID,
@@ -82,4 +122,25 @@ func SetLikeInfo(videoID, userID, likeTime int64) error {
 	}
 
 	return nil
+}
+
+// DelLikeInfo 删除指定视频和用户的点赞信息
+func DelLikeInfo(videoID, userID string) error {
+	key := fmt.Sprintf("like:%s:%s", videoID, userID)
+	_, err := Rs.Del(context.Background(), key).Result()
+	if err != nil {
+		return fmt.Errorf("failed to delete like info: %v", err)
+	}
+	return nil
+}
+
+// InitLikeCount DelLikeCount Redis中增加和删除两个新的键
+func InitLikeCount(videoID int64) error {
+	key := fmt.Sprintf("video:%d:like", videoID)
+	return Rs.Set(context.Background(), key, 0, 0).Err()
+}
+
+func DelLikeCount(videoID int64) error {
+	key := fmt.Sprintf("video:%d:like", videoID)
+	return Rs.Del(context.Background(), key).Err()
 }
