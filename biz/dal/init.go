@@ -24,5 +24,5 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	DB.AutoMigrate(&pojo.User{}, &pojo.Video{})
+	DB.AutoMigrate(&pojo.User{}, &pojo.Video{}, &pojo.Comment{})
 }
