@@ -150,3 +150,52 @@ func GetFollowerList(ctx context.Context, c *app.RequestContext) {
 	message = "success"
 	c.JSON(consts.StatusOK, resp)
 }
+
+// GetFriendList .
+// @router /douyin/relation/friend/list/ [GET]
+func GetFriendList(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req relation.FriendListRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp := new(relation.FriendListResponse)
+	message := ""
+	resp.StatusMsg = &message
+	_, exist := c.Get("user_name")
+	if !exist {
+		resp.StatusCode = 1
+		message = "解析Token失败，没有Token解析的信息"
+		c.JSON(consts.StatusBadRequest, resp)
+		return
+	}
+
+	Followings, err := redis.GetMyFriends(strconv.FormatInt(req.UserID, 10))
+	if err != nil {
+		resp.StatusCode = 1
+		message = "查询朋友失败"
+		c.JSON(consts.StatusBadRequest, resp)
+		return
+	}
+	var users []*user.UserInfo
+
+	for _, userID := range Followings {
+		to, _ := dal.FindUserByID(userID)
+		f := &user.UserInfo{
+			ID:            userID,
+			Name:          to[0].UserName,
+			FollowCount:   0,
+			FollowerCount: 0,
+			IsFollow:      false,
+		}
+		users = append(users, f)
+	}
+
+	resp.UserList = users
+	resp.StatusCode = 0
+	message = "success"
+	c.JSON(consts.StatusOK, resp)
+}

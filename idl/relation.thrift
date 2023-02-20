@@ -35,8 +35,20 @@ struct FollowerListResponse {
     3: optional list<user.UserInfo> user_list
 }
 
+struct FriendListRequest {
+    1: i64 user_id
+    2: string token
+}
+
+struct FriendListResponse {
+    1: i64 status_code
+    2: optional string status_msg
+    3: optional list<user.UserInfo> user_list
+}
+
 service RelationService {
     FollowResponse FollowAction(1: FollowRequest request)(api.post="/douyin/relation/action/")
     FollowingListResponse GetFollowList(1: FollowingListRequest request)(api.get="/douyin/relation/follow/list/")
     FollowerListResponse GetFollowerList(1: FollowerListRequest request)(api.get="/douyin/relation/follower/list/")
+    FriendListResponse GetFriendList(1: FriendListRequest request) (api.get="/douyin/relation/friend/list/")
 }

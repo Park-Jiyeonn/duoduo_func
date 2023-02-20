@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // 存储用户关注列表的键：following:{userID}，其中userID是当前用户的ID，存储该用户关注的所有用户ID。
@@ -76,4 +77,30 @@ func GetFollowers(userID string) ([]int64, error) {
 		Followers[i] = id
 	}
 	return Followers, nil
+}
+
+func GetMyFriends(userID string) ([]int64, error) {
+	var friendIDs []int64
+	followingKeys, err := Rs.SMembers(context.Background(), fmt.Sprintf("following:%s", userID)).Result()
+	if err != nil {
+		return friendIDs, err
+	}
+
+	for _, followingKey := range followingKeys {
+		followerID, err := strconv.ParseInt(strings.TrimPrefix(followingKey, "following:"), 10, 64)
+		if err != nil {
+			return friendIDs, err
+		}
+
+		isFriend, err := Rs.SIsMember(context.Background(), fmt.Sprintf("following:%d", followerID), fmt.Sprintf("%s", userID)).Result()
+		if err != nil {
+			return friendIDs, err
+		}
+
+		if isFriend {
+			friendIDs = append(friendIDs, followerID)
+		}
+	}
+
+	return friendIDs, nil
 }

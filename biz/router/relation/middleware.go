@@ -61,3 +61,18 @@ func _getfollowerlistMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{mw.JwtMiddleware()}
 }
+
+func _friendMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _list1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getfriendlistMw() []app.HandlerFunc {
+	// your code...
+	return []app.HandlerFunc{mw.JwtMiddleware()}
+}
