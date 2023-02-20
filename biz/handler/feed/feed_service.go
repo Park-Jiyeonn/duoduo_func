@@ -47,6 +47,7 @@ func GetVideoList(ctx context.Context, c *app.RequestContext) {
 		//fmt.Println(v.CoverPath)
 		users, _ := dal.FindUserByName(v.UserName)
 		likeCount, _ := redis.GetLikeCount(int64(v.ID))
+		commetCount, _ := dal.QueryCommentsCount(int64(v.ID))
 		isLike := false
 		likeInfo, _ := redis.GetLikeInfo(strconv.Itoa(int(v.ID)), strconv.Itoa(int(users[0].ID)))
 		if likeInfo != nil {
@@ -64,7 +65,7 @@ func GetVideoList(ctx context.Context, c *app.RequestContext) {
 			PlayURL:       "http://192.168.137.1:8888/data/" + v.VideoPath,
 			CoverURL:      "http://192.168.137.1:8888/data/" + v.CoverPath,
 			FavoriteCount: likeCount,
-			CommentCount:  0,
+			CommentCount:  commetCount,
 			IsFavorite:    isLike,
 			Title:         v.Title,
 		}

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	dal.Init()
-	redis.InitRedis()
+	redis.InitRedis() //sudo service redis-server start
 	h := server.Default()
 
 	h.Static("/data/", ".")

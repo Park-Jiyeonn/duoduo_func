@@ -12,7 +12,7 @@ struct CommentInfo {
 struct CommentRequest {
     1: string token
     2: i64 video_id
-    3: bool action_type
+    3: string action_type
     4: optional string comment_text
     5: optional i64 comment_id
 }

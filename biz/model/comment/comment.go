@@ -295,7 +295,7 @@ func (p *CommentInfo) String() string {
 type CommentRequest struct {
 	Token       string  `thrift:"token,1" form:"token" json:"token" query:"token"`
 	VideoID     int64   `thrift:"video_id,2" form:"video_id" json:"video_id" query:"video_id"`
-	ActionType  bool    `thrift:"action_type,3" form:"action_type" json:"action_type" query:"action_type"`
+	ActionType  string  `thrift:"action_type,3" form:"action_type" json:"action_type" query:"action_type"`
 	CommentText *string `thrift:"comment_text,4,optional" form:"comment_text" json:"comment_text,omitempty" query:"comment_text"`
 	CommentID   *int64  `thrift:"comment_id,5,optional" form:"comment_id" json:"comment_id,omitempty" query:"comment_id"`
 }
@@ -312,7 +312,7 @@ func (p *CommentRequest) GetVideoID() (v int64) {
 	return p.VideoID
 }
 
-func (p *CommentRequest) GetActionType() (v bool) {
+func (p *CommentRequest) GetActionType() (v string) {
 	return p.ActionType
 }
 
@@ -390,7 +390,7 @@ func (p *CommentRequest) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 3:
-			if fieldTypeId == thrift.BOOL {
+			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -468,7 +468,7 @@ func (p *CommentRequest) ReadField2(iprot thrift.TProtocol) error {
 }
 
 func (p *CommentRequest) ReadField3(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadBool(); err != nil {
+	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
 		p.ActionType = v
@@ -574,10 +574,10 @@ WriteFieldEndError:
 }
 
 func (p *CommentRequest) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("action_type", thrift.BOOL, 3); err != nil {
+	if err = oprot.WriteFieldBegin("action_type", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteBool(p.ActionType); err != nil {
+	if err := oprot.WriteString(p.ActionType); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {

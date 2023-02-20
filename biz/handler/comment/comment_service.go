@@ -4,10 +4,14 @@ package comment
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"simple_tiktok/biz/dal"
 	"simple_tiktok/biz/model/comment"
+	"simple_tiktok/biz/model/user"
+	"simple_tiktok/pojo"
+	"time"
 )
 
 // CommentAction .
@@ -22,7 +26,61 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(comment.CommentResponse)
+	message := ""
+	resp.StatusMsg = &message
 
+	userName, exists := c.Get("user_name")
+	if !exists {
+		resp.StatusCode = 1
+		message = "解析Token失败，没有Token解析的信息"
+		c.JSON(consts.StatusBadRequest, resp)
+		return
+	}
+
+	users, _ := dal.FindUserByName(userName.(string))
+	var newComment = pojo.Comment{
+		UserInfoID:  int64(users[0].ID),
+		VideoID:     req.VideoID,
+		Content:     "",
+		PublishDate: time.Now().Format("2006-01-02 15:04:05"),
+	}
+	if req.CommentText != nil {
+		newComment.Content = *req.CommentText
+	}
+	if req.ActionType == "1" {
+		err := dal.CreateComment(&newComment)
+		if err != nil {
+			resp.StatusCode = 1
+			message = "创建评论失败！"
+			c.JSON(consts.StatusBadRequest, resp)
+			return
+		}
+	} else {
+		err := dal.DeleteCommentByID(*req.CommentID)
+		if err != nil {
+			resp.StatusCode = 1
+			message = "删除评论失败！"
+			c.JSON(consts.StatusBadRequest, resp)
+			return
+		}
+	}
+
+	resp.StatusCode = 0
+	message = "success"
+
+	resCommet := &comment.CommentInfo{
+		ID: int64(newComment.ID),
+		User: &user.UserInfo{
+			ID:            int64(users[0].ID),
+			Name:          userName.(string),
+			FollowCount:   0,
+			FollowerCount: 0,
+			IsFollow:      false,
+		},
+		Content:    newComment.Content,
+		CreateDate: newComment.PublishDate,
+	}
+	resp.Comment = resCommet
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -38,6 +96,39 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(comment.CommentListResponse)
-
+	message := ""
+	resp.StatusMsg = &message
+	comments, err := dal.QueryCommentByVideoID(req.VideoID)
+	fmt.Println(comments)
+	if err != nil {
+		resp.StatusCode = 1
+		message = "创建评论失败！"
+		c.JSON(consts.StatusBadRequest, resp)
+		return
+	}
+	var comment_list []*comment.CommentInfo
+	for _, v := range comments {
+		users, err := dal.FindUserByID(v.UserInfoID)
+		if err != nil {
+			resp.StatusCode = 1
+			message = "根据视频评论的ID查询用户失败！"
+			c.JSON(consts.StatusBadRequest, resp)
+			return
+		}
+		newComment := &comment.CommentInfo{
+			ID: int64(v.ID),
+			User: &user.UserInfo{
+				ID:            int64(users[0].ID),
+				Name:          users[0].UserName,
+				FollowCount:   0,
+				FollowerCount: 0,
+				IsFollow:      false,
+			},
+			Content:    v.Content,
+			CreateDate: v.PublishDate,
+		}
+		comment_list = append(comment_list, newComment)
+	}
+	resp.CommentList = comment_list
 	c.JSON(consts.StatusOK, resp)
 }
