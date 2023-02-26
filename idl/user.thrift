@@ -34,7 +34,7 @@ struct LoginResponse {
 
 struct UserInfoRequest {
     1: i64 user_id
-    2: i64 query_id
+    2: string token
 }
 
 struct UserInfoResponse {

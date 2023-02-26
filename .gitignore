@@ -17,8 +17,6 @@ _testmain.go
 *.prof
 *.rar
 *.zip
-*.mp4
-*.jpeg
 *.gz
 *.psd
 *.bmd
@@ -29,6 +27,7 @@ _testmain.go
 *settings.pyc
 *.sublime-project
 *.sublime-workspace
+*.mp4
 !.gitkeep
 .DS_Store
 /.idea

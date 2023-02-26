@@ -1,0 +1,5 @@
+init_api:
+	hz new -mod simple_tiktok/cmd/api -idl ../../idl/user.thrift
+
+update_api:
+	hz update -mod simple_tiktok/cmd/api -idl ../../idl/user.thrift
