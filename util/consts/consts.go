@@ -7,11 +7,15 @@ const (
 
 	ApiServiceName = "api"
 
-	BaseServiceName = "base"
+	BaseServiceName     = "base"
+	InteractServiceName = "interact"
 
-	TCP             = "tcp"
-	BaseServiceAddr = ":9000"
-	ExportEndpoint  = ":4317"
-	ETCDAddress     = "127.0.0.1:2379"
-	DefaultLimit    = 10
+	TCP = "tcp"
+
+	BaseServiceAddr     = ":9000"
+	InteractServiceAddr = ":9001"
+
+	ExportEndpoint = ":4317"
+	ETCDAddress    = "127.0.0.1:2379"
+	DefaultLimit   = 10
 )
