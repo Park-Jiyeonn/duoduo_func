@@ -14,6 +14,9 @@ sudo lsof -i tcp:9000 | awk 'NR!=1 {print $2}' | xargs sudo kill
 # 查找占用9001端口的进程并杀死
 sudo lsof -i tcp:9001 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
+# 查找占用9002端口的进程并杀死
+sudo lsof -i tcp:9002 | awk 'NR!=1 {print $2}' | xargs sudo kill
+
 # 进入第一个文件夹
 cd ./cmd/api
 
@@ -29,6 +32,13 @@ sh output/bootstrap.sh &
 
 # 进入第三个文件夹
 cd ../interact
+
+# 在当前文件夹下执行命令，并将其放入后台运行
+sh build.sh
+sh output/bootstrap.sh &
+
+# 进入第四个文件夹
+cd ../social
 
 # 在当前文件夹下执行命令，并将其放入后台运行
 sh build.sh

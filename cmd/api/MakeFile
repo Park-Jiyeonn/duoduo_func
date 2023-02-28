@@ -4,3 +4,4 @@ init_api:
 update_api:
 	hz update -mod simple_tiktok/cmd/api -idl ../../idl/base.thrift
 	hz update -mod simple_tiktok/cmd/api -idl ../../idl/interact.thrift
+	hz update -mod simple_tiktok/cmd/api -idl ../../idl/social.thrift

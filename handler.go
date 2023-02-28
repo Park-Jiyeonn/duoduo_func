@@ -4,6 +4,7 @@ import (
 	"context"
 	base "simple_tiktok/kitex_gen/base"
 	interact "simple_tiktok/kitex_gen/interact"
+	social "simple_tiktok/kitex_gen/social"
 )
 
 // BaseServiceImpl implements the last service interface defined in the IDL.
@@ -65,6 +66,78 @@ func (s *InteractServiceImpl) CommentAction(ctx context.Context, request *intera
 
 // GetCommentList implements the InteractServiceImpl interface.
 func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *interact.CommentListRequest) (resp *interact.CommentListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// FollowAction implements the RelationServiceImpl interface.
+func (s *RelationServiceImpl) FollowAction(ctx context.Context, request *social.FollowRequest) (resp *social.FollowResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetFollowList implements the RelationServiceImpl interface.
+func (s *RelationServiceImpl) GetFollowList(ctx context.Context, request *social.FollowingListRequest) (resp *social.FollowingListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetFollowerList implements the RelationServiceImpl interface.
+func (s *RelationServiceImpl) GetFollowerList(ctx context.Context, request *social.FollowerListRequest) (resp *social.FollowerListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetFriendList implements the RelationServiceImpl interface.
+func (s *RelationServiceImpl) GetFriendList(ctx context.Context, request *social.FriendListRequest) (resp *social.FriendListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// MessageChat implements the RelationServiceImpl interface.
+func (s *RelationServiceImpl) MessageChat(ctx context.Context, req *social.MessageChatReq) (resp *social.MessageChatResp, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// MessageAction implements the RelationServiceImpl interface.
+func (s *RelationServiceImpl) MessageAction(ctx context.Context, req *social.MessageActionReq) (resp *social.MessageActionResp, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// FollowAction implements the SocialServiceImpl interface.
+func (s *SocialServiceImpl) FollowAction(ctx context.Context, request *social.FollowRequest) (resp *social.FollowResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetFollowList implements the SocialServiceImpl interface.
+func (s *SocialServiceImpl) GetFollowList(ctx context.Context, request *social.FollowingListRequest) (resp *social.FollowingListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetFollowerList implements the SocialServiceImpl interface.
+func (s *SocialServiceImpl) GetFollowerList(ctx context.Context, request *social.FollowerListRequest) (resp *social.FollowerListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetFriendList implements the SocialServiceImpl interface.
+func (s *SocialServiceImpl) GetFriendList(ctx context.Context, request *social.FriendListRequest) (resp *social.FriendListResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// MessageChat implements the SocialServiceImpl interface.
+func (s *SocialServiceImpl) MessageChat(ctx context.Context, req *social.MessageChatReq) (resp *social.MessageChatResp, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// MessageAction implements the SocialServiceImpl interface.
+func (s *SocialServiceImpl) MessageAction(ctx context.Context, req *social.MessageActionReq) (resp *social.MessageActionResp, err error) {
 	// TODO: Your code here...
 	return
 }

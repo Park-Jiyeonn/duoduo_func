@@ -9,11 +9,13 @@ const (
 
 	BaseServiceName     = "base"
 	InteractServiceName = "interact"
+	SocialServiceName   = "social"
 
 	TCP = "tcp"
 
 	BaseServiceAddr     = ":9000"
 	InteractServiceAddr = ":9001"
+	SocialServiceAddr   = ":9002"
 
 	ExportEndpoint = ":4317"
 	ETCDAddress    = "127.0.0.1:2379"
