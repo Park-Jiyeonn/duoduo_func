@@ -8,8 +8,9 @@ import (
 )
 
 func main() {
-	rpc.Init()
 	h := server.Default()
+	rpc.Init()
+	h.Static("/data/", "../..")
 	register(h)
 	h.Spin()
 }

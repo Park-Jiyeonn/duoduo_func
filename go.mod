@@ -6,8 +6,8 @@ require (
 	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/hertz v0.5.2
 	github.com/cloudwego/kitex v0.4.4
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/hertz-contrib/obs-opentelemetry/logging/logrus v0.1.1
+	github.com/go-redis/redis/v8 v8.11.5
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.1
 	github.com/kitex-contrib/obs-opentelemetry/logging/logrus v0.0.0-20230219092456-5e6c84962323
 	github.com/kitex-contrib/registry-etcd v0.1.0
@@ -23,6 +23,7 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6 // indirect
 	github.com/bytedance/sonic v1.7.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/chenzhuoyu/iasm v0.0.0-20220818063314-28c361dae733 // indirect
 	github.com/choleraehyq/pid v0.0.15 // indirect
@@ -32,6 +33,7 @@ require (
 	github.com/cloudwego/thriftgo v0.2.4 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

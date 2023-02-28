@@ -1,7 +1,7 @@
 package rpc
 
-import "simple_tiktok/cmd/api/biz/rpc/user"
+import "simple_tiktok/cmd/api/biz/rpc/base"
 
 func Init() {
-	user.InitUser()
+	base.InitBase()
 }

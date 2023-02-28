@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-	user "simple_tiktok/kitex_gen/user/userservice"
+	base "simple_tiktok/kitex_gen/base/baseservice"
 )
 
 func main() {
-	svr := user.NewServer(new(UserServiceImpl))
+	svr := base.NewServer(new(BaseServiceImpl))
 
 	err := svr.Run()
 

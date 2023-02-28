@@ -2,26 +2,44 @@ package main
 
 import (
 	"context"
-	user "simple_tiktok/kitex_gen/user"
+	base "simple_tiktok/kitex_gen/base"
 )
 
-// UserServiceImpl implements the last service interface defined in the IDL.
-type UserServiceImpl struct{}
+// BaseServiceImpl implements the last service interface defined in the IDL.
+type BaseServiceImpl struct{}
 
-// UserRegister implements the UserServiceImpl interface.
-func (s *UserServiceImpl) UserRegister(ctx context.Context, request *user.RegisterRequest) (resp *user.RegisterResponse, err error) {
+// UserRegister implements the BaseServiceImpl interface.
+func (s *BaseServiceImpl) UserRegister(ctx context.Context, request *base.RegisterRequest) (resp *base.RegisterResponse, err error) {
 	// TODO: Your code here...
 	return
 }
 
-// UserLogin implements the UserServiceImpl interface.
-func (s *UserServiceImpl) UserLogin(ctx context.Context, request *user.LoginRequest) (resp *user.LoginResponse, err error) {
+// UserLogin implements the BaseServiceImpl interface.
+func (s *BaseServiceImpl) UserLogin(ctx context.Context, request *base.LoginRequest) (resp *base.LoginResponse, err error) {
 	// TODO: Your code here...
 	return
 }
 
-// GetUserInfo implements the UserServiceImpl interface.
-func (s *UserServiceImpl) GetUserInfo(ctx context.Context, request *user.UserInfoRequest) (resp *user.UserInfoResponse, err error) {
+// GetUserInfo implements the BaseServiceImpl interface.
+func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, request *base.UserInfoRequest) (resp *base.UserInfoResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetVideoList implements the BaseServiceImpl interface.
+func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRequest) (resp *base.FeedResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// PublishAction implements the BaseServiceImpl interface.
+func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.PublishRequest) (resp *base.PublishResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// GetPublishList implements the BaseServiceImpl interface.
+func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.PublishListRequest) (resp *base.PublishListResponse, err error) {
 	// TODO: Your code here...
 	return
 }

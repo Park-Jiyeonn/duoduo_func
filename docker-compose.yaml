@@ -13,6 +13,18 @@ services:
       - MYSQL_PASSWORD=1234
       - MYSQL_RANDOM_ROOT_PASSWORD="yes"
 
+  #Redis
+  redis:
+    image: redis:latest
+#    restart: always
+#    container_name: redis
+    ports:
+      - "5070:6379"
+#    volumes:
+#      - /root/docker/redis/conf/redis.conf:/etc/redis/redis.conf
+#      - /root/docker/redis/data:/data
+#    command: redis-server /etc/redis/redis.conf
+#    privileged: true
   # ETCD
   Etcd:
     image: 'bitnami/etcd:latest'
