@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"simple_tiktok/cmd/interact/dal/db"
 	"simple_tiktok/cmd/interact/dal/redis"
+	"simple_tiktok/cmd/interact/mq"
 	"simple_tiktok/kitex_gen/base"
 	interact "simple_tiktok/kitex_gen/interact"
 	"simple_tiktok/util/errno"
@@ -125,10 +126,16 @@ func (s *InteractServiceImpl) CommentAction(ctx context.Context, request *intera
 		newComment.Content = *request.CommentText
 	}
 	if request.ActionType == "1" {
-		err := db.CreateComment(ctx, &newComment)
+		err := mq.SendComment(&newComment)
+		go func() {
+			err := mq.ReceiveMessage(ctx)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		}()
 		if err != nil {
 			resp.StatusCode = 1
-			return resp, errno.NewErrNo("创建评论失败！")
+			return resp, errno.NewErrNo("发送消息到消息队列失败！" + err.Error())
 		}
 	} else {
 		err := db.DeleteCommentByID(ctx, *request.CommentId)

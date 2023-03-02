@@ -20,11 +20,18 @@ services:
 #    container_name: redis
     ports:
       - "5070:6379"
-#    volumes:
-#      - /root/docker/redis/conf/redis.conf:/etc/redis/redis.conf
-#      - /root/docker/redis/data:/data
-#    command: redis-server /etc/redis/redis.conf
-#    privileged: true
+
+# Rabbitmq
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_DEFAULT_VHOST: /
+
   # ETCD
   Etcd:
     image: 'bitnami/etcd:latest'

@@ -11,6 +11,7 @@ require (
 	github.com/kitex-contrib/obs-opentelemetry v0.2.1
 	github.com/kitex-contrib/obs-opentelemetry/logging/logrus v0.0.0-20230219092456-5e6c84962323
 	github.com/kitex-contrib/registry-etcd v0.1.0
+	github.com/streadway/amqp v1.0.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.24.5
