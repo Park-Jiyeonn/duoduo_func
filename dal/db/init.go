@@ -31,10 +31,42 @@ func Init() {
 			Logger:      gormlogrus,
 		},
 	)
-	DB.AutoMigrate(&User{}, &Video{}, &Message{}, &Comment{})
 	if err != nil {
 		panic(err)
 	}
+	err = DB.AutoMigrate(&User{}, &Video{}, &Message{}, &Comment{})
+	if err != nil {
+		panic(err)
+	}
+
+	if !DB.Migrator().HasIndex(&User{}, "idx_user_name") {
+		err = DB.Migrator().CreateIndex(&User{}, "idx_user_name")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if !DB.Migrator().HasIndex(&Video{}, "idx_video_username") {
+		err = DB.Migrator().CreateIndex(&Video{}, "idx_video_username")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if !DB.Migrator().HasIndex(&Comment{}, "idx_comment_user_id") {
+		err = DB.Migrator().CreateIndex(&Comment{}, "idx_comment_user_id")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if !DB.Migrator().HasIndex(&Message{}, "idx_message_user_id") {
+		err = DB.Migrator().CreateIndex(&Message{}, "idx_message_user_id")
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	//将 tracing.NewPlugin() 注册到 DB 实例中，用于开启 GORM 链路追踪。
 	if err := DB.Use(tracing.NewPlugin()); err != nil {
 		panic(err)

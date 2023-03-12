@@ -10,15 +10,15 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `json:"username"`
+	Username string `json:"username" gorm:"index:idx_user_name"`
 	Password string `json:"password"`
 }
 
 type Video struct {
 	gorm.Model
-	UserName  string `json:"username"` // 上传者的用户信息id
-	Title     string `json:"title"`    // 视频标题
-	VideoPath string `json:"play_url"` // 视频存储位置
+	UserName  string `json:"username" gorm:"index:idx_video_username"` // 上传者的用户信息id
+	Title     string `json:"title"`                                    // 视频标题
+	VideoPath string `json:"play_url"`                                 // 视频存储位置
 	CoverPath string `json:"cover_url"`
 }
 

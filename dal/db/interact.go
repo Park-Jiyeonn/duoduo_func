@@ -7,7 +7,7 @@ import (
 
 type Comment struct {
 	gorm.Model
-	UserID      int64  `json:"user_id"`
+	UserID      int64  `json:"user_id" gorm:"index:idx_comment_user_id"`
 	VideoID     int64  `json:"video_id"`
 	Content     string `json:"content"`
 	PublishDate string `json:"publish_date"`
