@@ -31,8 +31,7 @@ func Init() {
 			Logger:      gormlogrus,
 		},
 	)
-
-	DB.AutoMigrate(&Comment{})
+	DB.AutoMigrate(&User{}, &Video{}, &Message{}, &Comment{})
 	if err != nil {
 		panic(err)
 	}

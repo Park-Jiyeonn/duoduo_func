@@ -76,7 +76,7 @@ func FindVideoByUserID(ctx context.Context, userName string) ([]*Video, error) {
 }
 func FindVideoAll(ctx context.Context) ([]*Video, error) {
 	res := make([]*Video, 0)
-	err := DB.WithContext(ctx).Find(&res).Error
+	err := DB.WithContext(ctx).Order("created_at desc").Find(&res).Error
 	return res, err
 }
 

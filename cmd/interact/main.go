@@ -10,7 +10,7 @@ import (
 	"github.com/kitex-contrib/obs-opentelemetry/tracing"
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"net"
-	"simple_tiktok/cmd/interact/dal"
+	"simple_tiktok/dal"
 	"simple_tiktok/kitex_gen/interact/interactservice"
 	"simple_tiktok/util/consts"
 	"simple_tiktok/util/mw"

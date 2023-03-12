@@ -2704,7 +2704,9 @@ func (p *VideoInfo) Field8DeepEqual(src string) bool {
 
 type FeedRequest struct {
 	LatestTime *string `thrift:"latest_time,1,optional" frugal:"1,optional,string" json:"latest_time,omitempty"`
-	UserId     *int64  `thrift:"user_id,2,optional" frugal:"2,optional,i64" json:"user_id,omitempty"`
+	Token      *string `thrift:"token,2,optional" frugal:"2,optional,string" json:"token,omitempty"`
+	UserId     *int64  `thrift:"user_id,3,optional" frugal:"3,optional,i64" json:"user_id,omitempty"`
+	UserName   *string `thrift:"user_name,4,optional" frugal:"4,optional,string" json:"user_name,omitempty"`
 }
 
 func NewFeedRequest() *FeedRequest {
@@ -2724,6 +2726,15 @@ func (p *FeedRequest) GetLatestTime() (v string) {
 	return *p.LatestTime
 }
 
+var FeedRequest_Token_DEFAULT string
+
+func (p *FeedRequest) GetToken() (v string) {
+	if !p.IsSetToken() {
+		return FeedRequest_Token_DEFAULT
+	}
+	return *p.Token
+}
+
 var FeedRequest_UserId_DEFAULT int64
 
 func (p *FeedRequest) GetUserId() (v int64) {
@@ -2732,24 +2743,49 @@ func (p *FeedRequest) GetUserId() (v int64) {
 	}
 	return *p.UserId
 }
+
+var FeedRequest_UserName_DEFAULT string
+
+func (p *FeedRequest) GetUserName() (v string) {
+	if !p.IsSetUserName() {
+		return FeedRequest_UserName_DEFAULT
+	}
+	return *p.UserName
+}
 func (p *FeedRequest) SetLatestTime(val *string) {
 	p.LatestTime = val
+}
+func (p *FeedRequest) SetToken(val *string) {
+	p.Token = val
 }
 func (p *FeedRequest) SetUserId(val *int64) {
 	p.UserId = val
 }
+func (p *FeedRequest) SetUserName(val *string) {
+	p.UserName = val
+}
 
 var fieldIDToName_FeedRequest = map[int16]string{
 	1: "latest_time",
-	2: "user_id",
+	2: "token",
+	3: "user_id",
+	4: "user_name",
 }
 
 func (p *FeedRequest) IsSetLatestTime() bool {
 	return p.LatestTime != nil
 }
 
+func (p *FeedRequest) IsSetToken() bool {
+	return p.Token != nil
+}
+
 func (p *FeedRequest) IsSetUserId() bool {
 	return p.UserId != nil
+}
+
+func (p *FeedRequest) IsSetUserName() bool {
+	return p.UserName != nil
 }
 
 func (p *FeedRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -2782,8 +2818,28 @@ func (p *FeedRequest) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 2:
-			if fieldTypeId == thrift.I64 {
+			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -2831,10 +2887,28 @@ func (p *FeedRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *FeedRequest) ReadField2(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.Token = &v
+	}
+	return nil
+}
+
+func (p *FeedRequest) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
 		p.UserId = &v
+	}
+	return nil
+}
+
+func (p *FeedRequest) ReadField4(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.UserName = &v
 	}
 	return nil
 }
@@ -2851,6 +2925,14 @@ func (p *FeedRequest) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField2(oprot); err != nil {
 			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
 			goto WriteFieldError
 		}
 
@@ -2892,11 +2974,11 @@ WriteFieldEndError:
 }
 
 func (p *FeedRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if p.IsSetUserId() {
-		if err = oprot.WriteFieldBegin("user_id", thrift.I64, 2); err != nil {
+	if p.IsSetToken() {
+		if err = oprot.WriteFieldBegin("token", thrift.STRING, 2); err != nil {
 			goto WriteFieldBeginError
 		}
-		if err := oprot.WriteI64(*p.UserId); err != nil {
+		if err := oprot.WriteString(*p.Token); err != nil {
 			return err
 		}
 		if err = oprot.WriteFieldEnd(); err != nil {
@@ -2908,6 +2990,44 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *FeedRequest) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUserId() {
+		if err = oprot.WriteFieldBegin("user_id", thrift.I64, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.UserId); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *FeedRequest) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUserName() {
+		if err = oprot.WriteFieldBegin("user_name", thrift.STRING, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.UserName); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
 func (p *FeedRequest) String() string {
@@ -2926,7 +3046,13 @@ func (p *FeedRequest) DeepEqual(ano *FeedRequest) bool {
 	if !p.Field1DeepEqual(ano.LatestTime) {
 		return false
 	}
-	if !p.Field2DeepEqual(ano.UserId) {
+	if !p.Field2DeepEqual(ano.Token) {
+		return false
+	}
+	if !p.Field3DeepEqual(ano.UserId) {
+		return false
+	}
+	if !p.Field4DeepEqual(ano.UserName) {
 		return false
 	}
 	return true
@@ -2944,7 +3070,19 @@ func (p *FeedRequest) Field1DeepEqual(src *string) bool {
 	}
 	return true
 }
-func (p *FeedRequest) Field2DeepEqual(src *int64) bool {
+func (p *FeedRequest) Field2DeepEqual(src *string) bool {
+
+	if p.Token == src {
+		return true
+	} else if p.Token == nil || src == nil {
+		return false
+	}
+	if strings.Compare(*p.Token, *src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *FeedRequest) Field3DeepEqual(src *int64) bool {
 
 	if p.UserId == src {
 		return true
@@ -2952,6 +3090,18 @@ func (p *FeedRequest) Field2DeepEqual(src *int64) bool {
 		return false
 	}
 	if *p.UserId != *src {
+		return false
+	}
+	return true
+}
+func (p *FeedRequest) Field4DeepEqual(src *string) bool {
+
+	if p.UserName == src {
+		return true
+	} else if p.UserName == nil || src == nil {
+		return false
+	}
+	if strings.Compare(*p.UserName, *src) != 0 {
 		return false
 	}
 	return true

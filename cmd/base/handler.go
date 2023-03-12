@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"os"
-	"simple_tiktok/cmd/base/dal/db"
-	"simple_tiktok/cmd/base/dal/redis"
+	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/redis"
 	base "simple_tiktok/kitex_gen/base"
 	"simple_tiktok/util/errno"
 	util "simple_tiktok/util/ffmpeg"
@@ -139,9 +139,10 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRe
 	nextTime := int64(114514)
 	resp.StatusMsg = &message
 	resp.NextTime = &nextTime
+
+	// 数据库查询降序，Order(created_at desc)即可
 	videos, err := db.FindVideoAll(ctx)
 	if err != nil {
-		message = "数据库查询失败"
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("数据库查询失败")
 	}
@@ -154,11 +155,21 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRe
 		likeCount, _ := redis.GetLikeCount(ctx, int64(v.ID))
 
 		// 这里以后还要改改
-		commetCount := 0
+		commetCount, err := db.QueryCommentsCount(ctx, int64(v.ID))
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("数据库查询是评论数量失败")
+		}
 		isLike := false
-		likeInfo, _ := redis.GetLikeInfo(ctx, strconv.Itoa(int(v.ID)), strconv.Itoa(int(users[0].ID)))
-		if likeInfo != nil {
-			isLike = true
+		isFollow := false
+
+		if request.UserId != nil {
+			isLike, err = redis.HasLiked(ctx, *request.UserId, strconv.Itoa(int(v.ID)))
+			if err != nil {
+				resp.StatusCode = 1
+				return resp, errno.NewErrNo("redis查询是否点赞失败")
+			}
+			isFollow, err = redis.HasFollowed(ctx, *request.UserId, users[0].ID)
 		}
 
 		video := &base.VideoInfo{
@@ -167,7 +178,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRe
 				Id:            int64(users[0].ID),
 				Name:          v.UserName,
 				FollowerCount: 0,
-				IsFollow:      false,
+				IsFollow:      isFollow,
 			},
 			PlayUrl:       "http://192.168.137.1:8888/data/" + v.VideoPath,
 			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverPath,
@@ -209,12 +220,6 @@ func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.Publi
 		return resp, errno.NewErrNo("数据库寄寄")
 	}
 
-	err = redis.InitLikeCount(ctx, int64(video.ID))
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("redis寄寄")
-	}
-
 	resp.StatusCode = 0
 	message = "success"
 	return resp, nil
@@ -246,18 +251,12 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.Publ
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("redis，寄")
 		}
-		likeInfo, err := redis.GetLikeInfo(ctx, strconv.Itoa(int(v.ID)), strconv.Itoa(int(users[0].ID)))
+		isLike, err := redis.HasLiked(ctx, int64(users[0].ID), strconv.Itoa(int(v.ID)))
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("Redis查询是否点赞信息出错")
 		}
 
-		var isLike bool
-		if likeInfo == nil {
-			isLike = false
-		} else {
-			isLike = true
-		}
 		video := &base.VideoInfo{
 			Id: int64(v.ID),
 			Author: &base.UserInfo{

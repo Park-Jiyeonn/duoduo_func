@@ -6,7 +6,7 @@ import (
 	"simple_tiktok/util/errno"
 
 	"github.com/streadway/amqp"
-	"simple_tiktok/cmd/interact/dal/db"
+	"simple_tiktok/dal/db"
 	"simple_tiktok/util/consts"
 )
 

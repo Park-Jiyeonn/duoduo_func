@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"simple_tiktok/cmd/interact/dal/db"
-	"simple_tiktok/cmd/interact/dal/redis"
 	"simple_tiktok/cmd/interact/mq"
+	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	interact "simple_tiktok/kitex_gen/interact"
 	"simple_tiktok/util/errno"
@@ -20,32 +20,22 @@ type InteractServiceImpl struct{}
 func (s *InteractServiceImpl) LikeAction(ctx context.Context, request *interact.LikeRequest) (resp *interact.LikeResponse, err error) {
 	// TODO: Your code here...
 	resp = new(interact.LikeResponse)
-	likeInfo, err := redis.GetLikeInfo(ctx, request.VideoId, strconv.Itoa(int(*request.UserId)))
+	likeInfo, err := redis.HasLiked(ctx, *request.UserId, request.VideoId)
 	if err != nil {
 		resp.StatusCode = 1
-		return resp, errno.NewErrNo("Redis查询是否点赞信息出错")
+		return resp, errno.NewErrNo("Redis查询是否点赞出错")
 	}
-	if likeInfo == nil {
-		err := redis.SetLikeInfo(ctx, request.VideoId, strconv.Itoa(int(*request.UserId)))
+	if likeInfo == false {
+		err := redis.SetLikeInfo(ctx, *request.UserId, request.VideoId)
 		if err != nil {
 			resp.StatusCode = 1
-			return resp, errno.NewErrNo("Redis初始化点赞信息出错")
-		}
-		err = redis.IncrLikeCount(ctx, request.VideoId)
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("赞操作失败")
+			return resp, errno.NewErrNo("Redis赞操作失败")
 		}
 	} else {
-		err := redis.DecrLikeCount(ctx, request.VideoId)
+		err := redis.DelLikeInfo(ctx, *request.UserId, request.VideoId)
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("取消赞操作失败")
-		}
-		err = redis.DelLikeInfo(ctx, request.VideoId, strconv.Itoa(int(*request.UserId)))
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("删除赞操作失败")
 		}
 	}
 	resp.StatusCode = 0
@@ -67,10 +57,10 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, request *interact
 	var videoList []*base.VideoInfo
 	for _, v := range videos {
 		//fmt.Println(v.CoverPath)
-		like, err := redis.GetLikeCount(ctx, v)
+		likeCount, err := redis.GetLikeCount(ctx, v)
 		if err != nil {
 			resp.StatusCode = 1
-			return resp, errno.NewErrNo("redis，寄")
+			return resp, errno.NewErrNo("redis查询点赞数量失败")
 		}
 
 		theVideo, err := db.FindVideoByVideoID(ctx, v)
@@ -95,7 +85,7 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, request *interact
 			},
 			PlayUrl:       "http://192.168.137.1:8888/data/" + theVideo.VideoPath,
 			CoverUrl:      "http://192.168.137.1:8888/data/" + theVideo.CoverPath,
-			FavoriteCount: like,
+			FavoriteCount: likeCount,
 			CommentCount:  0,
 			IsFavorite:    true,
 			Title:         theVideo.Title,
@@ -128,6 +118,11 @@ func (s *InteractServiceImpl) CommentAction(ctx context.Context, request *intera
 	if request.ActionType == "1" {
 		err := mq.SendComment(&newComment)
 		go func() {
+			defer func() {
+				if err := recover(); err != nil {
+					fmt.Println("goroutine crashed:", err)
+				}
+			}()
 			err := mq.ReceiveMessage(ctx)
 			if err != nil {
 				fmt.Println(err.Error())

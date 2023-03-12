@@ -2180,7 +2180,9 @@ func (p *VideoInfo) String() string {
 
 type FeedRequest struct {
 	LatestTime *string `thrift:"latest_time,1,optional" form:"latest_time" json:"latest_time,omitempty" query:"latest_time"`
-	UserID     *int64  `thrift:"user_id,2,optional" form:"user_id" json:"user_id,omitempty" query:"user_id"`
+	Token      *string `thrift:"token,2,optional" form:"token" json:"token,omitempty" query:"token"`
+	UserID     *int64  `thrift:"user_id,3,optional" form:"user_id" json:"user_id,omitempty" query:"user_id"`
+	UserName   *string `thrift:"user_name,4,optional" form:"user_name" json:"user_name,omitempty" query:"user_name"`
 }
 
 func NewFeedRequest() *FeedRequest {
@@ -2196,6 +2198,15 @@ func (p *FeedRequest) GetLatestTime() (v string) {
 	return *p.LatestTime
 }
 
+var FeedRequest_Token_DEFAULT string
+
+func (p *FeedRequest) GetToken() (v string) {
+	if !p.IsSetToken() {
+		return FeedRequest_Token_DEFAULT
+	}
+	return *p.Token
+}
+
 var FeedRequest_UserID_DEFAULT int64
 
 func (p *FeedRequest) GetUserID() (v int64) {
@@ -2205,17 +2216,36 @@ func (p *FeedRequest) GetUserID() (v int64) {
 	return *p.UserID
 }
 
+var FeedRequest_UserName_DEFAULT string
+
+func (p *FeedRequest) GetUserName() (v string) {
+	if !p.IsSetUserName() {
+		return FeedRequest_UserName_DEFAULT
+	}
+	return *p.UserName
+}
+
 var fieldIDToName_FeedRequest = map[int16]string{
 	1: "latest_time",
-	2: "user_id",
+	2: "token",
+	3: "user_id",
+	4: "user_name",
 }
 
 func (p *FeedRequest) IsSetLatestTime() bool {
 	return p.LatestTime != nil
 }
 
+func (p *FeedRequest) IsSetToken() bool {
+	return p.Token != nil
+}
+
 func (p *FeedRequest) IsSetUserID() bool {
 	return p.UserID != nil
+}
+
+func (p *FeedRequest) IsSetUserName() bool {
+	return p.UserName != nil
 }
 
 func (p *FeedRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -2248,8 +2278,28 @@ func (p *FeedRequest) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 2:
-			if fieldTypeId == thrift.I64 {
+			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				if err = iprot.Skip(fieldTypeId); err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else {
@@ -2297,10 +2347,28 @@ func (p *FeedRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *FeedRequest) ReadField2(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.Token = &v
+	}
+	return nil
+}
+
+func (p *FeedRequest) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
 		p.UserID = &v
+	}
+	return nil
+}
+
+func (p *FeedRequest) ReadField4(iprot thrift.TProtocol) error {
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.UserName = &v
 	}
 	return nil
 }
@@ -2317,6 +2385,14 @@ func (p *FeedRequest) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField2(oprot); err != nil {
 			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
 			goto WriteFieldError
 		}
 
@@ -2358,11 +2434,11 @@ WriteFieldEndError:
 }
 
 func (p *FeedRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if p.IsSetUserID() {
-		if err = oprot.WriteFieldBegin("user_id", thrift.I64, 2); err != nil {
+	if p.IsSetToken() {
+		if err = oprot.WriteFieldBegin("token", thrift.STRING, 2); err != nil {
 			goto WriteFieldBeginError
 		}
-		if err := oprot.WriteI64(*p.UserID); err != nil {
+		if err := oprot.WriteString(*p.Token); err != nil {
 			return err
 		}
 		if err = oprot.WriteFieldEnd(); err != nil {
@@ -2374,6 +2450,44 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *FeedRequest) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUserID() {
+		if err = oprot.WriteFieldBegin("user_id", thrift.I64, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.UserID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *FeedRequest) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUserName() {
+		if err = oprot.WriteFieldBegin("user_name", thrift.STRING, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.UserName); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
 func (p *FeedRequest) String() string {

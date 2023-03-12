@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"gorm.io/gorm"
-	"simple_tiktok/cmd/base/dal/db"
 )
 
 type Message struct {
@@ -16,13 +15,6 @@ type Message struct {
 
 func (Message) TableName() string {
 	return "messages"
-}
-func QueryUserById(ctx context.Context, userId int64) ([]*db.User, error) {
-	res := make([]*db.User, 0)
-	if err := DB.WithContext(ctx).Where("id = ?", userId).Find(&res).Error; err != nil {
-		return nil, err
-	}
-	return res, nil
 }
 func CreateMessage(ctx context.Context, message *Message) error {
 	return DB.WithContext(ctx).Create(message).Error

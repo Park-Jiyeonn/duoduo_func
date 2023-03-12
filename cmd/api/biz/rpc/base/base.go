@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/client/callopt"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/kitex-contrib/obs-opentelemetry/provider"
 	"github.com/kitex-contrib/obs-opentelemetry/tracing"
@@ -69,15 +68,15 @@ func GetUserInfo(ctx context.Context, req *base.UserInfoRequest) (resp *base.Use
 	return resp, err
 }
 
-func GetVideoList(ctx context.Context, request *base.FeedRequest, callOptions ...callopt.Option) (r *base.FeedResponse, err error) {
+func GetVideoList(ctx context.Context, request *base.FeedRequest) (r *base.FeedResponse, err error) {
 	r, err = baseClient.GetVideoList(ctx, request)
 	return r, err
 }
-func PublishAction(ctx context.Context, request *base.PublishRequest, callOptions ...callopt.Option) (r *base.PublishResponse, err error) {
+func PublishAction(ctx context.Context, request *base.PublishRequest) (r *base.PublishResponse, err error) {
 	r, err = baseClient.PublishAction(ctx, request)
 	return r, err
 }
-func GetPublishList(ctx context.Context, request *base.PublishListRequest, callOptions ...callopt.Option) (r *base.PublishListResponse, err error) {
+func GetPublishList(ctx context.Context, request *base.PublishListRequest) (r *base.PublishListResponse, err error) {
 	r, err = baseClient.GetPublishList(ctx, request)
 	return r, err
 }

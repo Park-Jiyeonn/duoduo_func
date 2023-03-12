@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"simple_tiktok/cmd/social/dal/db"
-	"simple_tiktok/cmd/social/dal/redis"
+	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	social "simple_tiktok/kitex_gen/social"
 	"simple_tiktok/util/errno"
 	"sort"
-	"strconv"
 	"time"
 )
 
@@ -19,11 +18,20 @@ type SocialServiceImpl struct{}
 func (s *SocialServiceImpl) FollowAction(ctx context.Context, request *social.FollowRequest) (resp *social.FollowResponse, err error) {
 	// TODO: Your code here...
 	resp = new(social.FollowResponse)
-	err = redis.FollowUser(ctx, strconv.Itoa(int(*request.UserId)), request.ToUserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("点赞失败")
+	if request.ActionType != "1" {
+		err = redis.Unfollow(ctx, *request.UserId, request.ToUserId)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("取消关注失败")
+		}
+	} else {
+		err = redis.FollowUser(ctx, *request.UserId, request.ToUserId)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("关注失败")
+		}
 	}
+
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
 	return resp, nil
@@ -33,7 +41,7 @@ func (s *SocialServiceImpl) FollowAction(ctx context.Context, request *social.Fo
 func (s *SocialServiceImpl) GetFollowList(ctx context.Context, request *social.FollowingListRequest) (resp *social.FollowingListResponse, err error) {
 	// TODO: Your code here...
 	resp = new(social.FollowingListResponse)
-	Followings, err := redis.GetFollowing(ctx, strconv.FormatInt(request.UserId, 10))
+	Followings, err := redis.GetFollowing(ctx, request.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("查询关注的人失败")
@@ -41,14 +49,19 @@ func (s *SocialServiceImpl) GetFollowList(ctx context.Context, request *social.F
 
 	var users []*base.UserInfo
 
-	for _, userID := range Followings {
-		to, _ := db.QueryUserById(ctx, userID)
+	for _, ToUserID := range Followings {
+		isFollow, err := redis.HasFollowed(ctx, request.UserId, uint(ToUserID))
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("查询是否关注失败")
+		}
+		to, _ := db.QueryUserById(ctx, ToUserID)
 		f := &base.UserInfo{
-			Id:            userID,
+			Id:            ToUserID,
 			Name:          to[0].Username,
 			FollowCount:   0,
 			FollowerCount: 0,
-			IsFollow:      false,
+			IsFollow:      isFollow,
 		}
 		users = append(users, f)
 	}
@@ -70,21 +83,26 @@ func (s *SocialServiceImpl) GetFollowerList(ctx context.Context, request *social
 
 	message := ""
 	resp.StatusMsg = &message
-	Followings, err := redis.GetFollowers(ctx, strconv.FormatInt(request.UserId, 10))
+	Fans, err := redis.GetFans(ctx, request.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("查询粉丝失败")
 	}
 	var users []*base.UserInfo
 
-	for _, userID := range Followings {
-		to, _ := db.QueryUserById(ctx, userID)
+	for _, ToUserID := range Fans {
+		isFollow, err := redis.HasFollowed(ctx, request.UserId, uint(ToUserID))
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("查询是否关注失败")
+		}
+		to, _ := db.QueryUserById(ctx, ToUserID)
 		f := &base.UserInfo{
-			Id:            userID,
+			Id:            ToUserID,
 			Name:          to[0].Username,
 			FollowCount:   0,
 			FollowerCount: 0,
-			IsFollow:      false,
+			IsFollow:      isFollow,
 		}
 		users = append(users, f)
 	}
@@ -101,7 +119,7 @@ func (s *SocialServiceImpl) GetFriendList(ctx context.Context, request *social.F
 	resp = new(social.FriendListResponse)
 	message := ""
 	resp.StatusMsg = &message
-	Followings, err := redis.GetMyFriends(ctx, strconv.FormatInt(request.UserId, 10))
+	Followings, err := redis.GetMyFriends(ctx, request.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("查询朋友失败")
@@ -115,7 +133,7 @@ func (s *SocialServiceImpl) GetFriendList(ctx context.Context, request *social.F
 			Name:          to[0].Username,
 			FollowCount:   0,
 			FollowerCount: 0,
-			IsFollow:      false,
+			IsFollow:      true,
 		}
 		users = append(users, f)
 	}

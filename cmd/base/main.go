@@ -2,7 +2,7 @@ package main
 
 import (
 	"net"
-	"simple_tiktok/cmd/base/dal"
+	"simple_tiktok/dal"
 	"simple_tiktok/kitex_gen/base/baseservice"
 	"simple_tiktok/util/mw"
 

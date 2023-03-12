@@ -10,6 +10,7 @@ import (
 	ModelBase "simple_tiktok/cmd/api/biz/model/base"
 	RpcBase "simple_tiktok/cmd/api/biz/rpc/base"
 	"simple_tiktok/kitex_gen/base"
+	"simple_tiktok/util/jwt"
 )
 
 // UserRegister .
@@ -48,16 +49,10 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	fmt.Println("==================================================")
-	fmt.Println(req)
-	fmt.Println("==================================================")
 	resp, err := RpcBase.UserLogin(ctx, &base.LoginRequest{
 		Username: req.Username,
 		Password: req.Password,
 	})
-	fmt.Println("==================================================")
-	fmt.Println(resp)
-	fmt.Println("==================================================")
 	if err != nil {
 		resp = new(base.LoginResponse)
 		resp.StatusCode = 1
@@ -106,9 +101,13 @@ func GetVideoList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if req.Token != nil {
+		mc, _ := jwt.ParseToken(*req.Token)
+		req.UserID = &mc.UserID
+	}
 	resp, err := RpcBase.GetVideoList(ctx, &base.FeedRequest{
-		LatestTime: nil,
-		UserId:     nil,
+		LatestTime: req.LatestTime,
+		UserId:     req.UserID,
 	})
 	if err != nil {
 		resp = new(base.FeedResponse)
