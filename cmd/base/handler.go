@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/db/model"
 	"simple_tiktok/dal/redis"
 	base "simple_tiktok/kitex_gen/base"
 	"simple_tiktok/pkg/errno"
@@ -89,13 +90,18 @@ func (s *BaseServiceImpl) UserLogin(ctx context.Context, request *base.LoginRequ
 }
 
 // GetUserInfo implements the BaseServiceImpl interface.
-func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, request *base.UserInfoRequest) (resp *base.UserInfoResponse, err error) {
+func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoRequest) (resp *base.UserInfoResponse, err error) {
 	// TODO: Your code here...
-	resp = new(base.UserInfoResponse)
+	resp = base.NewUserInfoResponse()
 	var message = ""
 	resp.StatusMsg = &message
 
-	User, err := db.GetUserById(ctx, request.UserId)
+	var user *model.User
+	if redis.IsExists(ctx, req.UserId) != 0 {
+
+	}
+
+	user, err = db.GetUserById(ctx, req.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("数据库查询失败")
@@ -107,10 +113,10 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, request *base.UserInf
 	resp.StatusCode = 0
 	message = "请求成功"
 	resp.User = &base.UserInfo{
-		Id:            int64(User.ID),
-		Name:          User.Name,
-		FollowCount:   User.FollowCount,
-		FollowerCount: User.FollowerCount,
+		Id:            int64(user.ID),
+		Name:          user.Name,
+		FollowCount:   user.FollowCount,
+		FollowerCount: user.FollowerCount,
 		IsFollow:      false,
 	}
 	return resp, nil

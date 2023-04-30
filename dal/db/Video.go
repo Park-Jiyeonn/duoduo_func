@@ -51,3 +51,11 @@ func GetVideoByVideoId(ctx context.Context, vid int64) (*model.Video, error) {
 	}
 	return video, nil
 }
+
+func UpdateVideo(ctx context.Context, vid int64, videoMap *map[string]interface{}) (err error) {
+	err = DB.WithContext(ctx).Model(model.Video{}).Where("id = ?", vid).Updates(videoMap).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

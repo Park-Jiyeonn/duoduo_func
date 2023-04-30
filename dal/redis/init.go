@@ -8,7 +8,6 @@ import (
 var Rs *redis.Client
 
 func InitRedis() {
-	// 这里连接的端口号，是docker中的端口号！
 	Rs = redis.NewClient(&redis.Options{
 		Addr:     "localhost:5070",
 		Password: "",
