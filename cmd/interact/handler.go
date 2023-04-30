@@ -8,7 +8,7 @@ import (
 	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	interact "simple_tiktok/kitex_gen/interact"
-	"simple_tiktok/util/errno"
+	"simple_tiktok/pkg/errno"
 	"strconv"
 	"time"
 )
@@ -63,28 +63,28 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, request *interact
 			return resp, errno.NewErrNo("redis查询点赞数量失败")
 		}
 
-		theVideo, err := db.FindVideoByVideoID(ctx, v)
+		theVideo, err := db.GetVideoByVideoId(ctx, v)
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("没查到这个视频" + strconv.FormatInt(v, 10))
 		}
 
-		users, err := db.QueryUserByName(ctx, theVideo.UserName)
+		user, err := db.GetUserById(ctx, theVideo.UserId)
 		if err != nil {
 			resp.StatusCode = 1
-			return resp, errno.NewErrNo("没查到这个作者" + theVideo.UserName)
+			return resp, errno.NewErrNo("没查到这个作者" + strconv.Itoa(int(theVideo.UserId)))
 		}
 
 		video := &base.VideoInfo{
 			Id: v,
 			Author: &base.UserInfo{
-				Id:            int64(users[0].ID),
-				Name:          users[0].Username,
+				Id:            int64(user.ID),
+				Name:          user.Name,
 				FollowerCount: 0,
 				IsFollow:      false,
 			},
-			PlayUrl:       "http://192.168.137.1:8888/data/" + theVideo.VideoPath,
-			CoverUrl:      "http://192.168.137.1:8888/data/" + theVideo.CoverPath,
+			PlayUrl:       "http://192.168.137.1:8888/data/" + theVideo.PlayUrl,
+			CoverUrl:      "http://192.168.137.1:8888/data/" + theVideo.CoverUrl,
 			FavoriteCount: likeCount,
 			CommentCount:  0,
 			IsFavorite:    true,
@@ -174,7 +174,7 @@ func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *inter
 	}
 	var commentList []*interact.CommentInfo
 	for _, v := range comments {
-		users, err := db.QueryUserById(ctx, v.UserID)
+		user, err := db.GetUserById(ctx, v.UserID)
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("根据视频评论的ID查询用户失败！")
@@ -182,8 +182,8 @@ func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *inter
 		newComment := &interact.CommentInfo{
 			Id: int64(v.ID),
 			User: &base.UserInfo{
-				Id:            int64(users[0].ID),
-				Name:          users[0].Username,
+				Id:            int64(user.ID),
+				Name:          user.Name,
 				FollowCount:   0,
 				FollowerCount: 0,
 				IsFollow:      false,

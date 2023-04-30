@@ -2,7 +2,7 @@ package jwt
 
 import (
 	"errors"
-	"simple_tiktok/util/errno"
+	"simple_tiktok/pkg/errno"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"

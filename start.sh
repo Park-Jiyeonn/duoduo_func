@@ -6,16 +6,16 @@
 
 #通常情况下，行号为1的行往往是表头，我们可以通过这个命令来跳过表头，只处理数据行。
 # 查找占用8888端口的进程并杀死
-sudo lsof -i tcp:8888 | awk 'NR!=1 {print $2}' | xargs sudo kill
+lsof -i tcp:8888 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 查找占用9000端口的进程并杀死
-sudo lsof -i tcp:9000 | awk 'NR!=1 {print $2}' | xargs sudo kill
+lsof -i tcp:9000 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 查找占用9001端口的进程并杀死
-sudo lsof -i tcp:9001 | awk 'NR!=1 {print $2}' | xargs sudo kill
+lsof -i tcp:9001 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 查找占用9002端口的进程并杀死
-sudo lsof -i tcp:9002 | awk 'NR!=1 {print $2}' | xargs sudo kill
+lsof -i tcp:9002 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 进入第一个文件夹
 cd ./cmd/api

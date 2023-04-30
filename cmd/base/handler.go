@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"simple_tiktok/dal/db"
 	"simple_tiktok/dal/redis"
 	base "simple_tiktok/kitex_gen/base"
-	"simple_tiktok/util/errno"
+	"simple_tiktok/pkg/errno"
 	util "simple_tiktok/util/ffmpeg"
 	"simple_tiktok/util/jwt"
 	"strconv"
@@ -22,13 +21,13 @@ func (s *BaseServiceImpl) UserRegister(ctx context.Context, request *base.Regist
 	// TODO: Your code here...
 	resp = new(base.RegisterResponse)
 
-	users, err := db.QueryUserByName(ctx, request.Username)
+	user, err := db.GetUserByName(ctx, request.Username)
 	if err != nil {
 		resp.StatusCode = 1
 		resp.StatusMsg = "数据库查询用户存不存在失败"
 		return resp, err
 	}
-	if len(users) > 0 {
+	if user != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("用户已存在")
 	}
@@ -37,17 +36,13 @@ func (s *BaseServiceImpl) UserRegister(ctx context.Context, request *base.Regist
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("密码加密失败")
 	}
-	newUser := &db.User{
-		Username: request.Username,
-		Password: string(EncodePassword),
-	}
-	id, err := db.CreateUser(ctx, newUser)
+	id, err := db.CreateUser(ctx, request.Username, string(EncodePassword))
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("创建用户失败")
 	}
 
-	token, err := jwt.GenToken(int64(newUser.ID), newUser.Username)
+	token, err := jwt.GenToken(id, request.Username)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("创建jwt失败")
@@ -64,27 +59,21 @@ func (s *BaseServiceImpl) UserRegister(ctx context.Context, request *base.Regist
 func (s *BaseServiceImpl) UserLogin(ctx context.Context, request *base.LoginRequest) (resp *base.LoginResponse, err error) {
 	// TODO: Your code here...
 	resp = new(base.LoginResponse)
-	users, err := db.QueryUserByName(ctx, request.Username)
-	fmt.Println("==================================================")
-	fmt.Println("这里是服务端", request)
-	fmt.Println("==================================================")
+	user, err := db.GetUserByName(ctx, request.Username)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("数据库查询用户存不存在失败！")
 	}
 
-	fmt.Println("==================================================")
-	fmt.Println("这里是服务端", resp)
-	fmt.Println("==================================================")
 	//密码认证
-	err = bcrypt.CompareHashAndPassword([]byte(users[0].Password), []byte(request.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("用户名或密码错误")
 	}
 
 	//颁发token
-	token, err := jwt.GenToken(int64(users[0].ID), users[0].Username)
+	token, err := jwt.GenToken(int64(user.ID), user.Name)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("颁发token失败")
@@ -92,7 +81,7 @@ func (s *BaseServiceImpl) UserLogin(ctx context.Context, request *base.LoginRequ
 
 	resp.StatusCode = 0
 	message := "登录成功"
-	Id := int64(users[0].ID)
+	Id := int64(user.ID)
 	resp.StatusMsg = &message
 	resp.Token = &token
 	resp.UserId = &Id
@@ -106,11 +95,7 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, request *base.UserInf
 	var message = ""
 	resp.StatusMsg = &message
 
-	fmt.Println("===================================")
-	fmt.Println(request)
-	fmt.Println("===================================")
-	//数据库查一查，有没有这个人
-	ThisUser, err := db.GetUser(ctx, request.UserId)
+	User, err := db.GetUserById(ctx, request.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("数据库查询失败")
@@ -122,10 +107,10 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, request *base.UserInf
 	resp.StatusCode = 0
 	message = "请求成功"
 	resp.User = &base.UserInfo{
-		Id:            int64(ThisUser.ID),
-		Name:          ThisUser.Username,
-		FollowCount:   0,
-		FollowerCount: 0,
+		Id:            int64(User.ID),
+		Name:          User.Name,
+		FollowCount:   User.FollowCount,
+		FollowerCount: User.FollowerCount,
 		IsFollow:      false,
 	}
 	return resp, nil
@@ -140,18 +125,23 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRe
 	resp.StatusMsg = &message
 	resp.NextTime = &nextTime
 
+	lastestTime, err := strconv.Atoi(*request.LatestTime)
+	if err != nil {
+		return resp, errno.NewErrNo("转换数字时间失败	")
+	}
+
 	// 数据库查询降序，Order(created_at desc)即可
-	videos, err := db.FindVideoAll(ctx)
+	videos, err := db.MGetByTime(ctx, int64(lastestTime))
 	if err != nil {
 		resp.StatusCode = 1
-		return resp, errno.NewErrNo("数据库查询失败")
+
 	}
 	// 假设你有一个名为videoSlice的存储了多个VideoInfo的切片
 
 	var videoList []*base.VideoInfo
 	for _, v := range videos {
 		//fmt.Println(v.CoverPath)
-		users, _ := db.QueryUserByName(ctx, v.UserName)
+		user, _ := db.GetUserById(ctx, v.UserId)
 		likeCount, _ := redis.GetLikeCount(ctx, int64(v.ID))
 
 		// 这里以后还要改改
@@ -169,21 +159,21 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRe
 				resp.StatusCode = 1
 				return resp, errno.NewErrNo("redis查询是否点赞失败")
 			}
-			isFollow, err = redis.HasFollowed(ctx, *request.UserId, users[0].ID)
+			isFollow, err = redis.HasFollowed(ctx, *request.UserId, user.ID)
 		}
 
 		video := &base.VideoInfo{
 			Id: int64(v.ID),
 			Author: &base.UserInfo{
-				Id:            int64(users[0].ID),
-				Name:          v.UserName,
+				Id:            int64(user.ID),
+				Name:          user.Name,
 				FollowerCount: 0,
 				IsFollow:      isFollow,
 			},
-			PlayUrl:       "http://192.168.137.1:8888/data/" + v.VideoPath,
-			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverPath,
+			PlayUrl:       "http://192.168.137.1:8888/data/" + v.PlayUrl,
+			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverUrl,
 			FavoriteCount: likeCount,
-			CommentCount:  int64(commetCount),
+			CommentCount:  commetCount,
 			IsFavorite:    isLike,
 			Title:         v.Title,
 		}
@@ -201,21 +191,18 @@ func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.Publi
 	resp = new(base.PublishResponse)
 	message := ""
 	resp.StatusMsg = &message
-	video := db.Video{
-		UserName:  request.UserName,
-		Title:     request.Title,
-		VideoPath: request.Title + ".mp4",
-		CoverPath: request.Title + ".jpg",
-	}
+	VideoPath := request.Title + ".mp4"
+	CoverPath := request.Title + ".jpg"
 
 	//这里也需要保存到本地，路径那也是相对于当前的程序的
-	if err := util.Cover("../../data/"+video.VideoPath, "../../data/"+video.CoverPath); err != nil {
+	if err = util.Cover("../../data/"+VideoPath, "../../data/"+CoverPath); err != nil {
 		resp.StatusCode = 1
 		str, _ := os.Getwd()
 		return resp, errno.NewErrNo("获取视频封面失败，当前程序路径" + str)
 	}
 	// 执行数据库事务
-	if err := db.CreateVedio(ctx, &video); err != nil {
+	err = db.CreateVideo(ctx, VideoPath, CoverPath, request.Title, request.UserId)
+	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("数据库寄寄")
 	}
@@ -232,13 +219,13 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.Publ
 	message := ""
 	resp.StatusMsg = &message
 
-	users, err := db.QueryUserById(ctx, request.UserId)
+	user, err := db.GetUserById(ctx, request.UserId)
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("查找这个用户失败")
 	}
 
-	videos, err := db.FindVideoByUserID(ctx, users[0].Username)
+	videos, err := db.GetVideoByUserId(ctx, int64(user.ID))
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("没找到视频相关信息，寄")
@@ -251,7 +238,7 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.Publ
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("redis，寄")
 		}
-		isLike, err := redis.HasLiked(ctx, int64(users[0].ID), strconv.Itoa(int(v.ID)))
+		isLike, err := redis.HasLiked(ctx, int64(user.ID), strconv.Itoa(int(v.ID)))
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("Redis查询是否点赞信息出错")
@@ -260,13 +247,13 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.Publ
 		video := &base.VideoInfo{
 			Id: int64(v.ID),
 			Author: &base.UserInfo{
-				Id:            int64(users[0].ID),
-				Name:          users[0].Username,
+				Id:            int64(user.ID),
+				Name:          user.Name,
 				FollowerCount: 0,
 				IsFollow:      false,
 			},
-			PlayUrl:       "http://192.168.137.1:8888/data/" + v.VideoPath,
-			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverPath,
+			PlayUrl:       "http://192.168.137.1:8888/data/" + v.PlayUrl,
+			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverUrl,
 			FavoriteCount: like,
 			CommentCount:  0,
 			IsFavorite:    isLike,

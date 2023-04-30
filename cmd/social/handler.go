@@ -6,7 +6,7 @@ import (
 	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	social "simple_tiktok/kitex_gen/social"
-	"simple_tiktok/util/errno"
+	"simple_tiktok/pkg/errno"
 	"sort"
 	"time"
 )
@@ -55,10 +55,10 @@ func (s *SocialServiceImpl) GetFollowList(ctx context.Context, request *social.F
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("查询是否关注失败")
 		}
-		to, _ := db.QueryUserById(ctx, ToUserID)
+		to, _ := db.GetUserById(ctx, ToUserID)
 		f := &base.UserInfo{
 			Id:            ToUserID,
-			Name:          to[0].Username,
+			Name:          to.Name,
 			FollowCount:   0,
 			FollowerCount: 0,
 			IsFollow:      isFollow,
@@ -96,10 +96,10 @@ func (s *SocialServiceImpl) GetFollowerList(ctx context.Context, request *social
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("查询是否关注失败")
 		}
-		to, _ := db.QueryUserById(ctx, ToUserID)
+		to, _ := db.GetUserById(ctx, ToUserID)
 		f := &base.UserInfo{
 			Id:            ToUserID,
-			Name:          to[0].Username,
+			Name:          to.Name,
 			FollowCount:   0,
 			FollowerCount: 0,
 			IsFollow:      isFollow,
@@ -127,10 +127,10 @@ func (s *SocialServiceImpl) GetFriendList(ctx context.Context, request *social.F
 	var users []*base.UserInfo
 
 	for _, userID := range Followings {
-		to, _ := db.QueryUserById(ctx, userID)
+		to, _ := db.GetUserById(ctx, userID)
 		f := &base.UserInfo{
 			Id:            userID,
-			Name:          to[0].Username,
+			Name:          to.Name,
 			FollowCount:   0,
 			FollowerCount: 0,
 			IsFollow:      true,

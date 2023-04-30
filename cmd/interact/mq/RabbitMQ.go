@@ -3,10 +3,9 @@ package mq
 import (
 	"context"
 	"encoding/json"
-	"simple_tiktok/util/errno"
-
 	"github.com/streadway/amqp"
 	"simple_tiktok/dal/db"
+	"simple_tiktok/pkg/errno"
 	"simple_tiktok/util/consts"
 )
 
