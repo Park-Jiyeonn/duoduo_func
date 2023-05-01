@@ -16,21 +16,21 @@ func HasLiked(ctx context.Context, userID int64, videoID string) (bool, error) {
 }
 
 // GetLikedVideos 查询用户点赞过的视频
-func GetLikedVideos(ctx context.Context, userID int64) ([]int64, error) {
-	var likedVideos []int64
-	key := fmt.Sprintf("user:%d:likes", userID)
-
-	ret, err := Rs.SMembers(ctx, key).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, val := range ret {
-		num, _ := strconv.ParseInt(val, 10, 64)
-		likedVideos = append(likedVideos, num)
-	}
-	return likedVideos, nil
-}
+//func GetLikedVideos(ctx context.Context, userID int64) ([]int64, error) {
+//	var likedVideos []int64
+//	key := fmt.Sprintf("user:%d:likes", userID)
+//
+//	ret, err := Rs.SMembers(ctx, key).Result()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	for _, val := range ret {
+//		num, _ := strconv.ParseInt(val, 10, 64)
+//		likedVideos = append(likedVideos, num)
+//	}
+//	return likedVideos, nil
+//}
 
 func GetLikeCount(ctx context.Context, videoID int64) (int64, error) {
 	key := fmt.Sprintf("video:%d:like_count", videoID)
@@ -45,33 +45,33 @@ func GetLikeCount(ctx context.Context, videoID int64) (int64, error) {
 	return sum, nil
 }
 
-func SetLikeInfo(ctx context.Context, userID int64, videoID string) error {
-	// 包含两个操作，一，集合的加入，二，string的修改
-	key := fmt.Sprintf("user:%d:likes", userID)
-	err := Rs.SAdd(ctx, key, videoID).Err()
-	if err != nil {
-		return err
-	}
-
-	key = fmt.Sprintf("video:%s:like_count", videoID)
-	err = Rs.Incr(ctx, key).Err()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func DelLikeInfo(ctx context.Context, userID int64, videoID string) error {
-	key := fmt.Sprintf("user:%d:likes", userID)
-	err := Rs.SRem(ctx, key, videoID).Err()
-	if err != nil {
-		return err
-	}
-
-	key = fmt.Sprintf("video:%s:like_count", videoID)
-	err = Rs.Decr(ctx, key).Err()
-	if err != nil {
-		return err
-	}
-	return nil
-}
+//func SetLikeInfo(ctx context.Context, userID int64, videoID string) error {
+//	// 包含两个操作，一，集合的加入，二，string的修改
+//	key := fmt.Sprintf("user:%d:likes", userID)
+//	err := Rs.SAdd(ctx, key, videoID).Err()
+//	if err != nil {
+//		return err
+//	}
+//
+//	key = fmt.Sprintf("video:%s:like_count", videoID)
+//	err = Rs.Incr(ctx, key).Err()
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
+//
+//func DelLikeInfo(ctx context.Context, userID int64, videoID string) error {
+//	key := fmt.Sprintf("user:%d:likes", userID)
+//	err := Rs.SRem(ctx, key, videoID).Err()
+//	if err != nil {
+//		return err
+//	}
+//
+//	key = fmt.Sprintf("video:%s:like_count", videoID)
+//	err = Rs.Decr(ctx, key).Err()
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}

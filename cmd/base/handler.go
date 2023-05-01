@@ -143,65 +143,90 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 }
 
 // GetVideoList implements the BaseServiceImpl interface.
-func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRequest) (resp *base.FeedResponse, err error) {
+func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedRequest) (resp *base.FeedResponse, err error) {
 	// TODO: Your code here...
-	resp = new(base.FeedResponse)
+	resp = base.NewFeedResponse()
 	message := ""
 	nextTime := int64(114514)
 	resp.StatusMsg = &message
 	resp.NextTime = &nextTime
 
-	lastestTime, err := strconv.Atoi(*request.LatestTime)
+	latestTime, err := strconv.Atoi(*req.LatestTime)
 	if err != nil {
-		return resp, errno.NewErrNo("转换数字时间失败	")
+		return resp, errno.NewErrNo("转换数字时间失败")
 	}
-
-	// 数据库查询降序，Order(created_at desc)即可
-	videos, err := db.MGetByTime(ctx, int64(lastestTime))
+	videos, err := db.MGetByTime(ctx, int64(latestTime))
 	if err != nil {
 		resp.StatusCode = 1
-
+		return nil, err
 	}
-	// 假设你有一个名为videoSlice的存储了多个VideoInfo的切片
 
 	var videoList []*base.VideoInfo
-	for _, v := range videos {
-		//fmt.Println(v.CoverPath)
-		user, _ := db.GetUserById(ctx, v.UserId)
-		likeCount, _ := redis.GetLikeCount(ctx, int64(v.ID))
-
-		// 这里以后还要改改
-		commetCount, err := db.QueryCommentsCount(ctx, int64(v.ID))
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("数据库查询是评论数量失败")
-		}
-		isLike := false
-		isFollow := false
-
-		if request.UserId != nil {
-			isLike, err = redis.HasLiked(ctx, *request.UserId, strconv.Itoa(int(v.ID)))
+	for _, video := range videos {
+		//fmt.Println(video.CoverPath)
+		var user *model.User
+		if redis.UserIsExists(ctx, video.UserId) == 0 {
+			user, err = db.GetUserById(ctx, video.UserId)
 			if err != nil {
-				resp.StatusCode = 1
-				return resp, errno.NewErrNo("redis查询是否点赞失败")
+				return nil, err
 			}
-			isFollow, err = redis.HasFollowed(ctx, *request.UserId, user.ID)
+			redis.SetUserInfo(ctx, user)
+		} else {
+			user, err = redis.GetUserInfo(ctx, video.UserId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if redis.VideoIsExists(ctx, int64(video.ID)) == 0 {
+			redis.SetVideoMessage(ctx, video)
+		}
+
+		isLike := false
+		if redis.LikeIsExists(ctx, *req.UserId) != 0 {
+			isLike = redis.IsLike(ctx, *req.UserId, int64(video.ID))
+		} else {
+			isLike, err = db.HasLiked(ctx, *req.UserId, int64(video.ID))
+			if err != nil {
+				return
+			}
+			var action int64
+			if isLike {
+				action = 1
+			} else {
+				action = -1
+			}
+			redis.FavoriteAction(ctx, *req.UserId, int64(video.ID), action)
+		}
+
+		isFollow := false
+		if redis.FollowIsExists(ctx, *req.UserId) != 0 {
+			isFollow = redis.IsFollow(ctx, *req.UserId, video.UserId)
+		} else {
+			isFollow, _ = db.IsFollowed(ctx, *req.UserId, video.UserId)
+			var action int64
+			if isFollow {
+				action = 1
+			} else {
+				action = -1
+			}
+			redis.FollowAction(ctx, *req.UserId, int64(video.ID), action)
 		}
 
 		video := &base.VideoInfo{
-			Id: int64(v.ID),
+			Id: int64(video.ID),
 			Author: &base.UserInfo{
 				Id:            int64(user.ID),
 				Name:          user.Name,
-				FollowerCount: 0,
+				FollowerCount: user.FollowerCount,
 				IsFollow:      isFollow,
 			},
-			PlayUrl:       "http://192.168.137.1:8888/data/" + v.PlayUrl,
-			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverUrl,
-			FavoriteCount: likeCount,
-			CommentCount:  commetCount,
+			PlayUrl:       "http://192.168.137.1:8888/data/" + video.PlayUrl,
+			CoverUrl:      "http://192.168.137.1:8888/data/" + video.CoverUrl,
+			FavoriteCount: video.FavoriteCount,
+			CommentCount:  video.CommentCount,
 			IsFavorite:    isLike,
-			Title:         v.Title,
+			Title:         video.Title,
 		}
 		videoList = append(videoList, video)
 	}
@@ -214,7 +239,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, request *base.FeedRe
 // PublishAction implements the BaseServiceImpl interface.
 func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.PublishRequest) (resp *base.PublishResponse, err error) {
 	// TODO: Your code here...
-	resp = new(base.PublishResponse)
+	resp = base.NewPublishResponse()
 	message := ""
 	resp.StatusMsg = &message
 	VideoPath := request.Title + ".mp4"
@@ -239,16 +264,24 @@ func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.Publi
 }
 
 // GetPublishList implements the BaseServiceImpl interface.
-func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.PublishListRequest) (resp *base.PublishListResponse, err error) {
+func (s *BaseServiceImpl) GetPublishList(ctx context.Context, req *base.PublishListRequest) (resp *base.PublishListResponse, err error) {
 	// TODO: Your code here...
 	resp = new(base.PublishListResponse)
 	message := ""
 	resp.StatusMsg = &message
 
-	user, err := db.GetUserById(ctx, request.UserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("查找这个用户失败")
+	var user *model.User
+	if redis.UserIsExists(ctx, req.UserId) == 0 {
+		user, err = db.GetUserById(ctx, req.UserId)
+		if err != nil {
+			return nil, err
+		}
+		redis.SetUserInfo(ctx, user)
+	} else {
+		user, err = redis.GetUserInfo(ctx, req.UserId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	videos, err := db.GetVideoByUserId(ctx, int64(user.ID))
@@ -257,33 +290,42 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, request *base.Publ
 		return resp, errno.NewErrNo("没找到视频相关信息，寄")
 	}
 	var videoList []*base.VideoInfo
-	for _, v := range videos {
-		//fmt.Println(v.CoverPath)
-		like, err := redis.GetLikeCount(ctx, int64(v.ID))
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("redis，寄")
+	for _, video := range videos {
+		var isLike bool
+		if redis.LikeIsExists(ctx, video.UserId) == 0 {
+			userLikes, err := db.GetUserLikeRecords(ctx, req.UserId)
+			if err != nil {
+				// TODO: 小心缓存击穿
+				isLike = false
+			}
+			// 将查询到数据的加入缓存
+			if len(userLikes) > 0 {
+				kv := make([]string, 0)
+				for _, userLike := range userLikes {
+					kv = append(kv, strconv.FormatInt(*userLike, 10))
+					kv = append(kv, "1")
+				}
+				if !redis.SetFavoriteList(ctx, req.UserId, kv...) {
+					return resp, err
+				}
+			}
 		}
-		isLike, err := redis.HasLiked(ctx, int64(user.ID), strconv.Itoa(int(v.ID)))
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("Redis查询是否点赞信息出错")
-		}
+		isLike = redis.IsLike(ctx, req.UserId, int64(video.ID))
 
 		video := &base.VideoInfo{
-			Id: int64(v.ID),
+			Id: int64(video.ID),
 			Author: &base.UserInfo{
 				Id:            int64(user.ID),
 				Name:          user.Name,
-				FollowerCount: 0,
+				FollowerCount: user.FollowerCount,
 				IsFollow:      false,
 			},
-			PlayUrl:       "http://192.168.137.1:8888/data/" + v.PlayUrl,
-			CoverUrl:      "http://192.168.137.1:8888/data/" + v.CoverUrl,
-			FavoriteCount: like,
-			CommentCount:  0,
+			PlayUrl:       "http://192.168.137.1:8888/data/" + video.PlayUrl,
+			CoverUrl:      "http://192.168.137.1:8888/data/" + video.CoverUrl,
+			FavoriteCount: video.FavoriteCount,
+			CommentCount:  video.CommentCount,
 			IsFavorite:    isLike,
-			Title:         v.Title,
+			Title:         video.Title,
 		}
 		videoList = append(videoList, video)
 	}
