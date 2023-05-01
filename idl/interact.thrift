@@ -4,7 +4,7 @@ include "base.thrift"
 
 struct LikeRequest {
     1: string token
-    2: string video_id
+    2: i64 video_id
     3: string action_type
     4: optional i64 user_id
     5: optional string user_name

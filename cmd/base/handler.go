@@ -97,25 +97,37 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 	resp.StatusMsg = &message
 
 	var user *model.User
-	if redis.UserIsExists(ctx, req.UserId) != 0 {
-		user, err = redis.GetUserInfo(ctx, req.UserId)
+	if redis.UserIsExists(ctx, req.ToUserId) != 0 {
+		user, err = redis.GetUserInfo(ctx, req.ToUserId)
 		resp.StatusCode = 1
 		if err != nil {
 			return resp, err
 		}
 	} else {
-		user, err = db.GetUserById(ctx, req.UserId)
+		user, err = db.GetUserById(ctx, req.ToUserId)
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("数据库查询失败")
 		}
 
 		//	数据库查询成功后，需要将信息写入缓存
-		_ = redis.SetUserInfo(ctx, user)
+		redis.SetUserInfo(ctx, user)
 	}
 
-	if redis.FollowIsExists(ctx, req.UserId) != 0 {
-
+	if redis.FollowIsExists(ctx, req.ToUserId) != 0 {
+		resp.User.IsFollow = redis.IsFollow(ctx, *req.UserId, req.ToUserId)
+	} else {
+		resp.User.IsFollow, err = db.IsFollowed(ctx, *req.UserId, req.ToUserId)
+		if err != nil {
+			return nil, err
+		}
+		var action int64
+		if resp.User.IsFollow {
+			action = 1
+		} else {
+			action = 0
+		}
+		redis.FollowAction(ctx, *req.UserId, req.ToUserId, action)
 	}
 
 	resp.StatusCode = 0

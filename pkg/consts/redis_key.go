@@ -17,3 +17,7 @@ func GetUserFollowerKey(userID int64) string {
 func GetUserLikeKey(userID int64) string {
 	return fmt.Sprintf("user_like_%d", userID)
 }
+
+func GetVideoMsgKey(videoID int64) string {
+	return fmt.Sprintf("video_message_%d", videoID)
+}

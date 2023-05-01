@@ -62,7 +62,7 @@ func (p *LikeRequest) FastRead(buf []byte) (int, error) {
 				}
 			}
 		case 2:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I64 {
 				l, err = p.FastReadField2(buf[offset:])
 				offset += l
 				if err != nil {
@@ -169,7 +169,7 @@ func (p *LikeRequest) FastReadField1(buf []byte) (int, error) {
 func (p *LikeRequest) FastReadField2(buf []byte) (int, error) {
 	offset := 0
 
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+	if v, l, err := bthrift.Binary.ReadI64(buf[offset:]); err != nil {
 		return offset, err
 	} else {
 		offset += l
@@ -229,9 +229,9 @@ func (p *LikeRequest) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWri
 	offset := 0
 	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "LikeRequest")
 	if p != nil {
+		offset += p.fastWriteField2(buf[offset:], binaryWriter)
 		offset += p.fastWriteField4(buf[offset:], binaryWriter)
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
-		offset += p.fastWriteField2(buf[offset:], binaryWriter)
 		offset += p.fastWriteField3(buf[offset:], binaryWriter)
 		offset += p.fastWriteField5(buf[offset:], binaryWriter)
 	}
@@ -266,8 +266,8 @@ func (p *LikeRequest) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWri
 
 func (p *LikeRequest) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "video_id", thrift.STRING, 2)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.VideoId)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "video_id", thrift.I64, 2)
+	offset += bthrift.Binary.WriteI64(buf[offset:], p.VideoId)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -315,8 +315,8 @@ func (p *LikeRequest) field1Length() int {
 
 func (p *LikeRequest) field2Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("video_id", thrift.STRING, 2)
-	l += bthrift.Binary.StringLengthNocopy(p.VideoId)
+	l += bthrift.Binary.FieldBeginLength("video_id", thrift.I64, 2)
+	l += bthrift.Binary.I64Length(p.VideoId)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l

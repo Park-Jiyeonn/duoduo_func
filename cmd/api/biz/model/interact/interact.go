@@ -11,7 +11,7 @@ import (
 
 type LikeRequest struct {
 	Token      string  `thrift:"token,1" form:"token" json:"token" query:"token"`
-	VideoID    string  `thrift:"video_id,2" form:"video_id" json:"video_id" query:"video_id"`
+	VideoID    int64   `thrift:"video_id,2" form:"video_id" json:"video_id" query:"video_id"`
 	ActionType string  `thrift:"action_type,3" form:"action_type" json:"action_type" query:"action_type"`
 	UserID     *int64  `thrift:"user_id,4,optional" form:"user_id" json:"user_id,omitempty" query:"user_id"`
 	UserName   *string `thrift:"user_name,5,optional" form:"user_name" json:"user_name,omitempty" query:"user_name"`
@@ -25,7 +25,7 @@ func (p *LikeRequest) GetToken() (v string) {
 	return p.Token
 }
 
-func (p *LikeRequest) GetVideoID() (v string) {
+func (p *LikeRequest) GetVideoID() (v int64) {
 	return p.VideoID
 }
 
@@ -97,7 +97,7 @@ func (p *LikeRequest) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 2:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -176,7 +176,7 @@ func (p *LikeRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *LikeRequest) ReadField2(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadString(); err != nil {
+	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
 		p.VideoID = v
@@ -274,10 +274,10 @@ WriteFieldEndError:
 }
 
 func (p *LikeRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("video_id", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("video_id", thrift.I64, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VideoID); err != nil {
+	if err := oprot.WriteI64(p.VideoID); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {

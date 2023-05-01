@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"simple_tiktok/cmd/interact/mq"
 	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/db/model"
 	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	interact "simple_tiktok/kitex_gen/interact"
@@ -17,81 +18,165 @@ import (
 type InteractServiceImpl struct{}
 
 // LikeAction implements the InteractServiceImpl interface.
-func (s *InteractServiceImpl) LikeAction(ctx context.Context, request *interact.LikeRequest) (resp *interact.LikeResponse, err error) {
+func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.LikeRequest) (resp *interact.LikeResponse, err error) {
 	// TODO: Your code here...
-	resp = new(interact.LikeResponse)
-	likeInfo, err := redis.HasLiked(ctx, *request.UserId, request.VideoId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("Redis查询是否点赞出错")
-	}
-	if likeInfo == false {
-		err := redis.SetLikeInfo(ctx, *request.UserId, request.VideoId)
+	resp = interact.NewLikeResponse()
+
+	if redis.LikeIsExists(ctx, *req.UserId) == 0 {
+		likeList, err := db.GetUserLikeRecords(ctx, *req.UserId)
 		if err != nil {
 			resp.StatusCode = 1
-			return resp, errno.NewErrNo("Redis赞操作失败")
+			return resp, err
 		}
+		if len(likeList) > 0 {
+			kv := make([]string, 0)
+			for _, videoId := range likeList {
+				kv = append(kv, strconv.FormatInt(*videoId, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFavoriteList(ctx, *req.UserId, kv...) {
+				resp.StatusCode = 1
+				return resp, errno.NewErrNo("Redis设置用户点赞视频缓存出错")
+			}
+		}
+	}
+	if redis.UserIsExists(ctx, *req.UserId) == 0 {
+		user, err := db.GetUserById(ctx, *req.UserId)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, err
+		}
+		if !redis.SetUserInfo(ctx, user) {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("Redis缓存用户信息出错")
+		}
+	}
+	if redis.LikeIsExists(ctx, req.VideoId) != 0 {
+		video, err := db.GetVideoByVideoId(ctx, req.VideoId)
+		if err != nil {
+			return nil, err
+		}
+		if !redis.SetVideoMessage(ctx, video) {
+			return nil, errno.NewErrNo("Redis缓存视频信息出错")
+		}
+	}
+	res := redis.GetVideoFields(ctx, req.VideoId, "user_id")
+	authorID, _ := strconv.ParseInt(res[0].(string), 10, 64)
+	if redis.UserIsExists(ctx, *req.UserId) == 0 {
+		user, err := db.GetUserById(ctx, authorID)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, err
+		}
+		if !redis.SetUserInfo(ctx, user) {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("Redis缓存用户信息出错")
+		}
+	}
+
+	var action int64
+	like := redis.IsLike(ctx, *req.UserId, req.VideoId)
+	if like && req.GetActionType() == "2" {
+		action = -1
+	} else if !like && req.GetActionType() == "1" {
+		action = 1
 	} else {
-		err := redis.DelLikeInfo(ctx, *request.UserId, request.VideoId)
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("取消赞操作失败")
-		}
+		return
 	}
+
+	// 更新点赞列表
+	if !redis.FavoriteAction(ctx, *req.UserId, req.VideoId, action) {
+		return resp, errno.NewErrNo("更新点赞列表失败")
+	}
+	// 更新用户点赞数
+	if !redis.IncrUserField(ctx, *req.UserId, "favorite_count", action) {
+		return resp, errno.NewErrNo("更新用户点赞数")
+	}
+	// 更新作者获赞数
+	//if !redis.IncrUserField(ctx, authorID, "total_favorited", action) {
+	//	return resp, errno.NewErrNo("更新点赞列表失败")
+	//}
+	// 更新视频获赞数
+	if !redis.IncrVideoField(ctx, req.VideoId, "favorite_count", action) {
+		return resp, errno.NewErrNo("更新视频获赞数")
+	}
+
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
 	return resp, nil
 }
 
 // GetLikeList implements the InteractServiceImpl interface.
-func (s *InteractServiceImpl) GetLikeList(ctx context.Context, request *interact.LikeListRequest) (resp *interact.LikeListResponse, err error) {
+func (s *InteractServiceImpl) GetLikeList(ctx context.Context, req *interact.LikeListRequest) (resp *interact.LikeListResponse, err error) {
 	// TODO: Your code here...
-	resp = new(interact.LikeListResponse)
+	resp = interact.NewLikeListResponse()
 	message := ""
 	resp.StatusMsg = &message
-	videos, err := redis.GetLikedVideos(ctx, request.UserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("redis查点赞过的列表，寄")
+
+	var likeList []*int64
+	if redis.LikeIsExists(ctx, req.UserId) == 0 {
+		likeList, err = db.GetUserLikeRecords(ctx, req.UserId)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, err
+		}
+		if len(likeList) > 0 {
+			kv := make([]string, 0)
+			for _, videoId := range likeList {
+				kv = append(kv, strconv.FormatInt(*videoId, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFavoriteList(ctx, req.UserId, kv...) {
+				resp.StatusCode = 1
+				return resp, errno.NewErrNo("Redis设置用户点赞视频缓存出错")
+			}
+		}
+	} else {
+		likeList = redis.GetAllUserLikes(ctx, req.UserId)
 	}
+
 	var videoList []*base.VideoInfo
-	for _, v := range videos {
-		//fmt.Println(v.CoverPath)
-		likeCount, err := redis.GetLikeCount(ctx, v)
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("redis查询点赞数量失败")
+	for _, vid := range likeList {
+		var video *model.Video
+		if redis.VideoIsExists(ctx, *vid) == 0 {
+			video, err = db.GetVideoByVideoId(ctx, *vid)
+			if err != nil {
+				return nil, err
+			}
+			redis.SetVideoMessage(ctx, video)
+		} else {
+			video, err = redis.GetVideoMessage(ctx, *vid)
 		}
 
-		theVideo, err := db.GetVideoByVideoId(ctx, v)
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("没查到这个视频" + strconv.FormatInt(v, 10))
+		var user *model.User
+		if redis.UserIsExists(ctx, video.UserId) == 0 {
+			user, err = db.GetUserById(ctx, video.UserId)
+			if err != nil {
+				return nil, err
+			}
+			redis.SetUserInfo(ctx, user)
+		} else {
+			user, err = redis.GetUserInfo(ctx, video.UserId)
 		}
 
-		user, err := db.GetUserById(ctx, theVideo.UserId)
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("没查到这个作者" + strconv.Itoa(int(theVideo.UserId)))
-		}
-
-		video := &base.VideoInfo{
-			Id: v,
+		retVideo := &base.VideoInfo{
+			Id: *vid,
 			Author: &base.UserInfo{
-				Id:            int64(user.ID),
+				Id:            video.UserId,
 				Name:          user.Name,
 				FollowerCount: 0,
 				IsFollow:      false,
 			},
-			PlayUrl:       "http://192.168.137.1:8888/data/" + theVideo.PlayUrl,
-			CoverUrl:      "http://192.168.137.1:8888/data/" + theVideo.CoverUrl,
-			FavoriteCount: likeCount,
+			PlayUrl:       "http://192.168.137.1:8888/data/" + video.PlayUrl,
+			CoverUrl:      "http://192.168.137.1:8888/data/" + video.CoverUrl,
+			FavoriteCount: video.FavoriteCount,
 			CommentCount:  0,
 			IsFavorite:    true,
-			Title:         theVideo.Title,
+			Title:         video.Title,
 		}
-		videoList = append(videoList, video)
+		videoList = append(videoList, retVideo)
 	}
+
 	//fmt.Println(videoList)
 	resp.VideoList = videoList
 	resp.StatusCode = 0

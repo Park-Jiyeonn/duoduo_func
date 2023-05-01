@@ -37,3 +37,13 @@ func SetUserInfo(ctx context.Context, user *model.User) bool {
 	key := consts.GetUserInfoKey(int64(user.ID))
 	return HSet(ctx, key, user)
 }
+
+// 1. 根据key和字段名查找值，key或field不存在时，对应的值返回nil，需要调用方自己判断
+// 2. 返回的类型都为string，调用方自行转换
+func GetUserFields(ctx context.Context, userID int64, field ...string) []interface{} {
+	return HMGet(ctx, consts.GetUserInfoKey(userID), field...)
+}
+
+func IncrUserField(ctx context.Context, userID int64, field string, incr int64) (ok bool) {
+	return HIncr(ctx, consts.GetUserInfoKey(userID), field, incr)
+}

@@ -12,7 +12,7 @@ import (
 
 type LikeRequest struct {
 	Token      string  `thrift:"token,1" frugal:"1,default,string" json:"token"`
-	VideoId    string  `thrift:"video_id,2" frugal:"2,default,string" json:"video_id"`
+	VideoId    int64   `thrift:"video_id,2" frugal:"2,default,i64" json:"video_id"`
 	ActionType string  `thrift:"action_type,3" frugal:"3,default,string" json:"action_type"`
 	UserId     *int64  `thrift:"user_id,4,optional" frugal:"4,optional,i64" json:"user_id,omitempty"`
 	UserName   *string `thrift:"user_name,5,optional" frugal:"5,optional,string" json:"user_name,omitempty"`
@@ -30,7 +30,7 @@ func (p *LikeRequest) GetToken() (v string) {
 	return p.Token
 }
 
-func (p *LikeRequest) GetVideoId() (v string) {
+func (p *LikeRequest) GetVideoId() (v int64) {
 	return p.VideoId
 }
 
@@ -58,7 +58,7 @@ func (p *LikeRequest) GetUserName() (v string) {
 func (p *LikeRequest) SetToken(val string) {
 	p.Token = val
 }
-func (p *LikeRequest) SetVideoId(val string) {
+func (p *LikeRequest) SetVideoId(val int64) {
 	p.VideoId = val
 }
 func (p *LikeRequest) SetActionType(val string) {
@@ -117,7 +117,7 @@ func (p *LikeRequest) Read(iprot thrift.TProtocol) (err error) {
 				}
 			}
 		case 2:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -196,7 +196,7 @@ func (p *LikeRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 
 func (p *LikeRequest) ReadField2(iprot thrift.TProtocol) error {
-	if v, err := iprot.ReadString(); err != nil {
+	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
 		p.VideoId = v
@@ -294,10 +294,10 @@ WriteFieldEndError:
 }
 
 func (p *LikeRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("video_id", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("video_id", thrift.I64, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VideoId); err != nil {
+	if err := oprot.WriteI64(p.VideoId); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -403,9 +403,9 @@ func (p *LikeRequest) Field1DeepEqual(src string) bool {
 	}
 	return true
 }
-func (p *LikeRequest) Field2DeepEqual(src string) bool {
+func (p *LikeRequest) Field2DeepEqual(src int64) bool {
 
-	if strings.Compare(p.VideoId, src) != 0 {
+	if p.VideoId != src {
 		return false
 	}
 	return true

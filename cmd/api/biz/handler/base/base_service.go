@@ -75,9 +75,15 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	userId, _ := c.Get("userid")
+	userID := userId.(int64)
+	userName1, _ := c.Get("username")
+	userName := userName1.(string)
 	resp, err := RpcBase.GetUserInfo(ctx, &base.UserInfoRequest{
-		UserId: req.UserID,
-		Token:  req.Token,
+		ToUserId: req.ToUserID,
+		Token:    req.Token,
+		UserId:   &userID,
+		Username: &userName,
 	})
 	if err != nil {
 		resp = new(base.UserInfoResponse)
