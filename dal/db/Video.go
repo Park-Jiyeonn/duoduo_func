@@ -24,7 +24,7 @@ func CreateVideo(ctx context.Context, playUrl string, coverUrl string, title str
 	return
 }
 
-func GetVideoByUserId(ctx context.Context, uid int64) ([]*model.Video, error) {
+func GetVideosByUserId(ctx context.Context, uid int64) ([]*model.Video, error) {
 	var videos []*model.Video
 	err := DB.WithContext(ctx).Model(model.Video{}).Where("user_id = ?", uid).Find(videos).Error
 	if err != nil {

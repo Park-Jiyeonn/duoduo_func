@@ -39,3 +39,10 @@ func GetUserByName(ctx context.Context, name string) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func UpdateUser(ctx context.Context, uid int64, userMap *map[string]interface{}) (err error) {
+	if err = DB.WithContext(ctx).Model(model.User{}).Where("id = ?", uid).Updates(&userMap).Error; err != nil {
+		return err
+	}
+	return nil
+}

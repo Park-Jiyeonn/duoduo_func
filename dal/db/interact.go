@@ -35,11 +35,11 @@ func QueryCommentByVideoID(ctx context.Context, videoId int64) (comments []*Comm
 }
 
 // QueryCommentsCount 查询有多少条评论
-func QueryCommentsCount(ctx context.Context, videoId int64) (int64, error) {
-	var count int64
-	result := DB.WithContext(ctx).Model(&Comment{}).Where("video_id = ?", videoId).Count(&count)
-	if result.Error != nil {
-		return 0, result.Error
-	}
-	return count, nil
-}
+//func QueryCommentsCount(ctx context.Context, videoId int64) (int64, error) {
+//	var count int64
+//	result := DB.WithContext(ctx).Model(&Comment{}).Where("video_id = ?", videoId).Count(&count)
+//	if result.Error != nil {
+//		return 0, result.Error
+//	}
+//	return count, nil
+//}

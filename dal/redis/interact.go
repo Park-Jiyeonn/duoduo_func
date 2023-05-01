@@ -6,14 +6,14 @@ import (
 	"strconv"
 )
 
-func HasLiked(ctx context.Context, userID int64, videoID string) (bool, error) {
-	key := fmt.Sprintf("user:%d:likes", userID) // 构造的key是userID，看看这个集合中有没有videoID
-	ret, err := Rs.SIsMember(ctx, key, videoID).Result()
-	if err != nil {
-		return false, err
-	}
-	return ret, nil
-}
+//func HasLiked(ctx context.Context, userID int64, videoID string) (bool, error) {
+//	key := fmt.Sprintf("user:%d:likes", userID) // 构造的key是userID，看看这个集合中有没有videoID
+//	ret, err := Rs.SIsMember(ctx, key, videoID).Result()
+//	if err != nil {
+//		return false, err
+//	}
+//	return ret, nil
+//}
 
 // GetLikedVideos 查询用户点赞过的视频
 //func GetLikedVideos(ctx context.Context, userID int64) ([]int64, error) {

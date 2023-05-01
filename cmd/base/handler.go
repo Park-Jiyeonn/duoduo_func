@@ -284,7 +284,7 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, req *base.PublishL
 		}
 	}
 
-	videos, err := db.GetVideoByUserId(ctx, int64(user.ID))
+	videos, err := db.GetVideosByUserId(ctx, int64(user.ID))
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("没找到视频相关信息，寄")
