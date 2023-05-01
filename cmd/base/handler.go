@@ -97,19 +97,27 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 	resp.StatusMsg = &message
 
 	var user *model.User
-	if redis.IsExists(ctx, req.UserId) != 0 {
+	if redis.UserIsExists(ctx, req.UserId) != 0 {
+		user, err = redis.GetUserInfo(ctx, req.UserId)
+		resp.StatusCode = 1
+		if err != nil {
+			return resp, err
+		}
+	} else {
+		user, err = db.GetUserById(ctx, req.UserId)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("数据库查询失败")
+		}
+
+		//	数据库查询成功后，需要将信息写入缓存
+		_ = redis.SetUserInfo(ctx, user)
+	}
+
+	if redis.FollowIsExists(ctx, req.UserId) != 0 {
 
 	}
 
-	user, err = db.GetUserById(ctx, req.UserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("数据库查询失败")
-	}
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("没有此用户")
-	}
 	resp.StatusCode = 0
 	message = "请求成功"
 	resp.User = &base.UserInfo{

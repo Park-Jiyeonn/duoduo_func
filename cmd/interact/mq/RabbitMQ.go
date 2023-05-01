@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"simple_tiktok/dal/db"
+	"simple_tiktok/pkg/consts"
 	"simple_tiktok/pkg/errno"
-	"simple_tiktok/util/consts"
 )
 
 // SendComment 将评论发送到消息队列

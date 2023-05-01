@@ -9,7 +9,7 @@ import (
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"simple_tiktok/kitex_gen/interact"
 	"simple_tiktok/kitex_gen/interact/interactservice"
-	"simple_tiktok/util/consts"
+	"simple_tiktok/pkg/consts"
 	"simple_tiktok/util/mw"
 )
 

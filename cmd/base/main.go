@@ -4,6 +4,7 @@ import (
 	"net"
 	"simple_tiktok/dal"
 	"simple_tiktok/kitex_gen/base/baseservice"
+	"simple_tiktok/pkg/consts"
 	"simple_tiktok/util/mw"
 
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -14,7 +15,6 @@ import (
 	"github.com/kitex-contrib/obs-opentelemetry/provider"
 	"github.com/kitex-contrib/obs-opentelemetry/tracing"
 	etcd "github.com/kitex-contrib/registry-etcd"
-	"simple_tiktok/util/consts"
 )
 
 func Init() {

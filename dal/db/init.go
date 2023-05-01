@@ -7,7 +7,7 @@ import (
 	"gorm.io/plugin/opentelemetry/logging/logrus"
 	"gorm.io/plugin/opentelemetry/tracing"
 	"simple_tiktok/dal/db/model"
-	"simple_tiktok/util/consts"
+	"simple_tiktok/pkg/consts"
 	"time"
 )
 

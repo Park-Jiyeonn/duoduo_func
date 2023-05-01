@@ -12,7 +12,7 @@ import (
 	"net"
 	"simple_tiktok/dal"
 	"simple_tiktok/kitex_gen/social/socialservice"
-	"simple_tiktok/util/consts"
+	"simple_tiktok/pkg/consts"
 	"simple_tiktok/util/mw"
 )
 

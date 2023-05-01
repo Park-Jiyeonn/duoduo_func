@@ -10,7 +10,7 @@ import (
 	etcd "github.com/kitex-contrib/registry-etcd"
 	"simple_tiktok/kitex_gen/social"
 	"simple_tiktok/kitex_gen/social/socialservice"
-	"simple_tiktok/util/consts"
+	"simple_tiktok/pkg/consts"
 	"simple_tiktok/util/mw"
 )
 
