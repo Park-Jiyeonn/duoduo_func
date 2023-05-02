@@ -9,6 +9,7 @@ import (
 	social "simple_tiktok/kitex_gen/social"
 	"simple_tiktok/pkg/errno"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -16,21 +17,96 @@ import (
 type SocialServiceImpl struct{}
 
 // FollowAction implements the SocialServiceImpl interface.
-func (s *SocialServiceImpl) FollowAction(ctx context.Context, request *social.FollowRequest) (resp *social.FollowResponse, err error) {
+func (s *SocialServiceImpl) FollowAction(ctx context.Context, req *social.FollowRequest) (resp *social.FollowResponse, err error) {
 	// TODO: Your code here...
-	resp = new(social.FollowResponse)
-	if request.ActionType != "1" {
-		err = redis.Unfollow(ctx, *request.UserId, request.ToUserId)
+	resp = social.NewFollowResponse()
+	userId, toUserId1 := req.GetUserId(), req.GetToUserId()
+	toUserId, _ := strconv.ParseInt(toUserId1, 10, 64)
+	// 1. 判断需要操作的对象在缓存中是否存在
+	if redis.FollowIsExists(ctx, userId) == 0 {
+		// 缓存中不存在用户粉丝列表
+		userList, err := db.GetFollowList(ctx, userId)
 		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("取消关注失败")
+			return nil, err
 		}
+		if len(userList) > 0 {
+			kv := make([]string, 0)
+			for _, user := range userList {
+				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFollowList(ctx, userId, kv...) {
+				return resp, errno.NewErrNo("redis 缓存失败")
+			}
+		}
+	}
+
+	if redis.FollowerIsExists(ctx, toUserId) == 0 {
+		// 缓存中不存在用户粉丝列表
+		userList, err := db.GetFollowerList(ctx, toUserId)
+		if err != nil {
+			return nil, err
+		}
+		if len(userList) > 0 {
+			kv := make([]string, 0)
+			for _, user := range userList {
+				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFollowerList(ctx, toUserId, kv...) {
+				return resp, errno.NewErrNo("redis 缓存失败")
+			}
+		}
+	}
+
+	if redis.UserIsExists(ctx, userId) == 0 {
+		// 当关注的用户不存在
+		user, err := db.GetUserById(ctx, userId)
+		if err != nil {
+			return resp, err
+		}
+		if !redis.SetUserInfo(ctx, user) {
+			return resp, errno.NewErrNo("redis 缓存失败")
+		}
+	}
+
+	if redis.UserIsExists(ctx, toUserId) == 0 {
+		// 当被关注的用户不存在
+		user, err := db.GetUserById(ctx, toUserId)
+		if err != nil {
+			return resp, err
+		}
+		if !redis.SetUserInfo(ctx, user) {
+			return resp, errno.NewErrNo("redis 缓存失败")
+		}
+	}
+
+	// 2. 判断操作类型
+	var action int64
+	follow := redis.IsFollow(ctx, userId, toUserId)
+	if follow && req.GetActionType() == "2" {
+		// 已关注并取消关注
+		action = -1
+	} else if !follow && req.GetActionType() == "1" {
+		// 关注
+		action = 1
 	} else {
-		err = redis.FollowUser(ctx, *request.UserId, request.ToUserId)
-		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("关注失败")
-		}
+		// 关系和操作不匹配
+		return resp, errno.NewErrNo("关系和操作不匹配")
+	}
+
+	// 3. 原子性的进行操作
+	// 更新用户关注列表
+	if !redis.FollowAction(ctx, userId, toUserId, action) {
+		return resp, errno.NewErrNo("redis 更新用户关注列表 failed")
+	}
+	// 更新用户关注数量
+	if !redis.IncrUserField(ctx, userId, "follow_count", action) {
+		return resp, errno.NewErrNo("redis 更新用户关注数量 failed")
+	}
+	// 更新用户被关注数量
+	if !redis.IncrUserField(ctx, toUserId, "follower_count", action) {
+		return resp, errno.NewErrNo("redis 更新用户被关注数量 failed")
 	}
 
 	resp.StatusCode = 0
@@ -39,37 +115,61 @@ func (s *SocialServiceImpl) FollowAction(ctx context.Context, request *social.Fo
 }
 
 // GetFollowList implements the SocialServiceImpl interface.
-func (s *SocialServiceImpl) GetFollowList(ctx context.Context, request *social.FollowingListRequest) (resp *social.FollowingListResponse, err error) {
+func (s *SocialServiceImpl) GetFollowList(ctx context.Context, req *social.FollowingListRequest) (resp *social.FollowingListResponse, err error) {
 	// TODO: Your code here...
-	resp = new(social.FollowingListResponse)
-	Followings, err := redis.GetFollowing(ctx, request.UserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("查询关注的人失败")
-	}
-
-	var users []*base.UserInfo
-
-	for _, ToUserID := range Followings {
-		isFollow, err := redis.HasFollowed(ctx, request.UserId, uint(ToUserID))
+	resp = social.NewFollowingListResponse()
+	userId := req.GetUserId()
+	var followidList []int64
+	if redis.FollowIsExists(ctx, userId) == 0 {
+		// 缓存中不存在查询用户粉丝列表
+		followidList, err := db.GetFollowList(ctx, userId)
 		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("查询是否关注失败")
+			return nil, err
 		}
-		to, _ := db.GetUserById(ctx, ToUserID)
-		f := &base.UserInfo{
-			Id:            ToUserID,
-			Name:          to.Name,
-			FollowCount:   0,
-			FollowerCount: 0,
-			IsFollow:      isFollow,
+		if len(followidList) > 0 {
+			kv := make([]string, 0)
+			for _, user := range followidList {
+				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFollowList(ctx, userId, kv...) {
+				return resp, errno.NewErrNo("redis 缓存 failed")
+			}
 		}
-		users = append(users, f)
+	} else {
+		// 缓存中存在用户粉丝列表
+		followidList = redis.GetFollowList(ctx, userId)
 	}
 
-	//fmt.Println(users)
-
-	resp.UserList = users
+	// 遍历查找查询用户所关注的用户
+	var retUsers []*base.UserInfo
+	if len(followidList) > 0 {
+		for _, followid := range followidList {
+			var follow = &model.User{}
+			if redis.UserIsExists(ctx, followid) == 0 {
+				// 如果要查询的用户不在缓存中
+				follow, err = db.GetUserById(ctx, followid)
+				if err != nil {
+					return resp, err
+				}
+				redis.SetUserInfo(ctx, follow)
+			} else {
+				// 要查询的用户位于缓存中
+				follow, err = redis.GetUserInfo(ctx, followid)
+				if err != nil {
+					return resp, err
+				}
+			}
+			retUsers = append(retUsers, &base.UserInfo{
+				Id:            int64(follow.ID),
+				Name:          follow.Name,
+				FollowCount:   follow.FollowCount,
+				FollowerCount: follow.FollowerCount,
+				IsFollow:      false,
+			})
+		}
+	}
+	resp.SetUserList(retUsers)
 	resp.StatusCode = 0
 	message := ""
 	resp.StatusMsg = &message
@@ -78,68 +178,149 @@ func (s *SocialServiceImpl) GetFollowList(ctx context.Context, request *social.F
 }
 
 // GetFollowerList implements the SocialServiceImpl interface.
-func (s *SocialServiceImpl) GetFollowerList(ctx context.Context, request *social.FollowerListRequest) (resp *social.FollowerListResponse, err error) {
+func (s *SocialServiceImpl) GetFollowerList(ctx context.Context, req *social.FollowerListRequest) (resp *social.FollowerListResponse, err error) {
 	// TODO: Your code here...
-	resp = new(social.FollowerListResponse)
-
+	resp = social.NewFollowerListResponse()
 	message := ""
 	resp.StatusMsg = &message
-	Fans, err := redis.GetFans(ctx, request.UserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("查询粉丝失败")
-	}
-	var users []*base.UserInfo
+	userId := req.GetUserId()
 
-	for _, ToUserID := range Fans {
-		isFollow, err := redis.HasFollowed(ctx, request.UserId, uint(ToUserID))
+	var followeridList []int64
+	if redis.FollowerIsExists(ctx, userId) == 0 {
+		followeridList, err := db.GetFollowerList(ctx, userId)
 		if err != nil {
-			resp.StatusCode = 1
-			return resp, errno.NewErrNo("查询是否关注失败")
+			return nil, err
 		}
-		to, _ := db.GetUserById(ctx, ToUserID)
-		f := &base.UserInfo{
-			Id:            ToUserID,
-			Name:          to.Name,
-			FollowCount:   0,
-			FollowerCount: 0,
-			IsFollow:      isFollow,
+		if len(followeridList) > 0 {
+			kv := make([]string, 0)
+			for _, user := range followeridList {
+				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFollowerList(ctx, userId, kv...) {
+				return resp, errno.NewErrNo("redis 缓存失败")
+			}
 		}
-		users = append(users, f)
+	} else {
+		followeridList = redis.GetFollowerList(ctx, userId)
 	}
 
-	resp.UserList = users
+	// 遍历查找查询用户所关注的用户
+	var followerList []*base.UserInfo
+	if len(followeridList) > 0 {
+		for _, followerid := range followeridList {
+			var follower = &model.User{}
+			if redis.UserIsExists(ctx, followerid) == 0 {
+				// 如果要查询的用户不在缓存中
+				follower, err = db.GetUserById(ctx, followerid)
+				if err != nil {
+					return resp, err
+				}
+				redis.SetUserInfo(ctx, follower)
+			} else {
+				// 要查询的用户位于缓存中
+				follower, err = redis.GetUserInfo(ctx, followerid)
+				if err != nil {
+					return resp, err
+				}
+			}
+			followerList = append(followerList, &base.UserInfo{
+				Id:            int64(follower.ID),
+				Name:          follower.Name,
+				FollowCount:   follower.FollowCount,
+				FollowerCount: follower.FollowerCount,
+				IsFollow:      false,
+			})
+		}
+	}
+	resp.SetUserList(followerList)
 	resp.StatusCode = 0
 	message = "success"
 	return resp, nil
 }
 
 // GetFriendList implements the SocialServiceImpl interface.
-func (s *SocialServiceImpl) GetFriendList(ctx context.Context, request *social.FriendListRequest) (resp *social.FriendListResponse, err error) {
+func (s *SocialServiceImpl) GetFriendList(ctx context.Context, req *social.FriendListRequest) (resp *social.FriendListResponse, err error) {
 	// TODO: Your code here...
-	resp = new(social.FriendListResponse)
+	resp = social.NewFriendListResponse()
 	message := ""
 	resp.StatusMsg = &message
-	Followings, err := redis.GetMyFriends(ctx, request.UserId)
-	if err != nil {
-		resp.StatusCode = 1
-		return resp, errno.NewErrNo("查询朋友失败")
+	userId := req.GetUserId()
+	var followList []int64
+	// Try to get the user follower list from cache.
+	// if missing, fill cache from dao.
+	if redis.FollowIsExists(ctx, userId) == 0 {
+		followList, err := db.GetFollowList(ctx, userId)
+		if err != nil {
+			return nil, err
+		}
+		if len(followList) > 0 {
+			kv := make([]string, 0)
+			for _, user := range followList {
+				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, "1")
+			}
+			if !redis.SetFollowList(ctx, userId, kv...) {
+				return resp, errno.NewErrNo("redis 缓存失败")
+			}
+		}
+	} else {
+		followList = redis.GetFollowList(ctx, userId)
 	}
-	var users []*base.UserInfo
 
-	for _, userID := range Followings {
-		to, _ := db.GetUserById(ctx, userID)
-		f := &base.UserInfo{
-			Id:            userID,
-			Name:          to.Name,
-			FollowCount:   0,
-			FollowerCount: 0,
+	var friends []*base.UserInfo
+	for _, followerId := range followList {
+		// Add the follower from cache
+
+		if redis.FollowIsExists(ctx, followerId) == 0 {
+			userList, err := db.GetFollowList(ctx, followerId)
+			if err != nil {
+				return nil, err
+			}
+			if len(userList) > 0 {
+				kv := make([]string, 0)
+				for _, user := range userList {
+					kv = append(kv, strconv.FormatInt(*user, 10))
+					kv = append(kv, "1")
+				}
+				if !redis.SetFollowList(ctx, followerId, kv...) {
+					return resp, errno.NewErrNo("redis 缓存 failed")
+				}
+			}
+		}
+		isFriend := redis.IsFollow(ctx, followerId, userId)
+		if isFriend == false {
+			continue
+		}
+		// Try to get follower UserMessage from cache
+		user := &model.User{}
+		if redis.UserIsExists(ctx, followerId) == 0 {
+			user, err = db.GetUserById(ctx, followerId)
+			if err != nil {
+				return resp, err
+			}
+			if !redis.SetUserInfo(ctx, user) {
+				return resp, errno.NewErrNo("redis 缓存 failed")
+			}
+		} else {
+			user, err = redis.GetUserInfo(ctx, followerId)
+			if err != nil {
+				return resp, err
+			}
+		}
+
+		friend := &base.UserInfo{
+			Id:            int64(user.ID),
+			Name:          user.Name,
+			FollowCount:   user.FollowCount,
+			FollowerCount: user.FollowerCount,
 			IsFollow:      true,
 		}
-		users = append(users, f)
+
+		friends = append(friends, friend)
 	}
 
-	resp.UserList = users
+	resp.UserList = friends
 	resp.StatusCode = 0
 	message = "success"
 	return resp, nil

@@ -1279,9 +1279,9 @@ func (p *LoginResponse) String() string {
 }
 
 type UserInfoRequest struct {
-	ToUserID int64   `thrift:"to_user_id,1" form:"to_user_id" json:"to_user_id" query:"to_user_id"`
+	UserID   int64   `thrift:"user_id,1" form:"user_id" json:"user_id" query:"user_id"`
 	Token    string  `thrift:"token,2" form:"token" json:"token" query:"token"`
-	UserID   *int64  `thrift:"user_id,3,optional" form:"user_id" json:"user_id,omitempty" query:"user_id"`
+	ToUserID *int64  `thrift:"to_user_id,3,optional" form:"to_user_id" json:"to_user_id,omitempty" query:"to_user_id"`
 	Username *string `thrift:"username,4,optional" form:"username" json:"username,omitempty" query:"username"`
 }
 
@@ -1289,21 +1289,21 @@ func NewUserInfoRequest() *UserInfoRequest {
 	return &UserInfoRequest{}
 }
 
-func (p *UserInfoRequest) GetToUserID() (v int64) {
-	return p.ToUserID
+func (p *UserInfoRequest) GetUserID() (v int64) {
+	return p.UserID
 }
 
 func (p *UserInfoRequest) GetToken() (v string) {
 	return p.Token
 }
 
-var UserInfoRequest_UserID_DEFAULT int64
+var UserInfoRequest_ToUserID_DEFAULT int64
 
-func (p *UserInfoRequest) GetUserID() (v int64) {
-	if !p.IsSetUserID() {
-		return UserInfoRequest_UserID_DEFAULT
+func (p *UserInfoRequest) GetToUserID() (v int64) {
+	if !p.IsSetToUserID() {
+		return UserInfoRequest_ToUserID_DEFAULT
 	}
-	return *p.UserID
+	return *p.ToUserID
 }
 
 var UserInfoRequest_Username_DEFAULT string
@@ -1316,14 +1316,14 @@ func (p *UserInfoRequest) GetUsername() (v string) {
 }
 
 var fieldIDToName_UserInfoRequest = map[int16]string{
-	1: "to_user_id",
+	1: "user_id",
 	2: "token",
-	3: "user_id",
+	3: "to_user_id",
 	4: "username",
 }
 
-func (p *UserInfoRequest) IsSetUserID() bool {
-	return p.UserID != nil
+func (p *UserInfoRequest) IsSetToUserID() bool {
+	return p.ToUserID != nil
 }
 
 func (p *UserInfoRequest) IsSetUsername() bool {
@@ -1423,7 +1423,7 @@ func (p *UserInfoRequest) ReadField1(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.ToUserID = v
+		p.UserID = v
 	}
 	return nil
 }
@@ -1441,7 +1441,7 @@ func (p *UserInfoRequest) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.UserID = &v
+		p.ToUserID = &v
 	}
 	return nil
 }
@@ -1497,10 +1497,10 @@ WriteStructEndError:
 }
 
 func (p *UserInfoRequest) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("to_user_id", thrift.I64, 1); err != nil {
+	if err = oprot.WriteFieldBegin("user_id", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI64(p.ToUserID); err != nil {
+	if err := oprot.WriteI64(p.UserID); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1531,11 +1531,11 @@ WriteFieldEndError:
 }
 
 func (p *UserInfoRequest) writeField3(oprot thrift.TProtocol) (err error) {
-	if p.IsSetUserID() {
-		if err = oprot.WriteFieldBegin("user_id", thrift.I64, 3); err != nil {
+	if p.IsSetToUserID() {
+		if err = oprot.WriteFieldBegin("to_user_id", thrift.I64, 3); err != nil {
 			goto WriteFieldBeginError
 		}
-		if err := oprot.WriteI64(*p.UserID); err != nil {
+		if err := oprot.WriteI64(*p.ToUserID); err != nil {
 			return err
 		}
 		if err = oprot.WriteFieldEnd(); err != nil {

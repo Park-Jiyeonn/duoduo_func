@@ -80,9 +80,9 @@ func GetUserInfo(ctx context.Context, c *app.RequestContext) {
 	userName1, _ := c.Get("username")
 	userName := userName1.(string)
 	resp, err := RpcBase.GetUserInfo(ctx, &base.UserInfoRequest{
-		ToUserId: req.ToUserID,
+		UserId:   req.UserID,
 		Token:    req.Token,
-		UserId:   &userID,
+		ToUserId: &userID,
 		Username: &userName,
 	})
 	if err != nil {

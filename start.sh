@@ -39,4 +39,4 @@ sh build.sh
 sh output/bootstrap.sh &
 
 # netsh interface portproxy add v4tov4 listenport=8888 connectaddress=172.17.161.115 connectport=8888 listenaddress=0.0.0.0 protocol=tcp
-# net interface portproxy show all
+# netsh interface portproxy show all

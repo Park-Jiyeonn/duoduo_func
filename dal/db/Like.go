@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"errors"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"simple_tiktok/dal/db/model"
 )
@@ -13,6 +15,9 @@ func GetUserLikeRecords(ctx context.Context, uid int64) ([]*int64, error) {
 		Where("user_id = ? AND action=1", uid).
 		Find(likeVideoIds).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return likeVideoIds, nil

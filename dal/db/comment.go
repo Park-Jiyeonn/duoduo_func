@@ -2,14 +2,20 @@ package db
 
 import (
 	"context"
+	"errors"
+	"gorm.io/gorm"
 	"simple_tiktok/dal/db/model"
 )
 
 func GetCommentList(ctx context.Context, vid int64) ([]*model.Comment, error) {
 	res := make([]*model.Comment, 0)
-	if err := DB.WithContext(ctx).
+	err := DB.WithContext(ctx).
 		Model(model.Comment{}).
-		Where("vid = ?", vid).Find(&res).Error; err != nil {
+		Where("vid = ?", vid).Find(&res).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res, nil

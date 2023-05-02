@@ -1379,7 +1379,7 @@ func (p *UserInfoRequest) FastReadField1(buf []byte) (int, error) {
 	} else {
 		offset += l
 
-		p.ToUserId = v
+		p.UserId = v
 
 	}
 	return offset, nil
@@ -1406,7 +1406,7 @@ func (p *UserInfoRequest) FastReadField3(buf []byte) (int, error) {
 		return offset, err
 	} else {
 		offset += l
-		p.UserId = &v
+		p.ToUserId = &v
 
 	}
 	return offset, nil
@@ -1460,8 +1460,8 @@ func (p *UserInfoRequest) BLength() int {
 
 func (p *UserInfoRequest) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "to_user_id", thrift.I64, 1)
-	offset += bthrift.Binary.WriteI64(buf[offset:], p.ToUserId)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "user_id", thrift.I64, 1)
+	offset += bthrift.Binary.WriteI64(buf[offset:], p.UserId)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -1478,9 +1478,9 @@ func (p *UserInfoRequest) fastWriteField2(buf []byte, binaryWriter bthrift.Binar
 
 func (p *UserInfoRequest) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	if p.IsSetUserId() {
-		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "user_id", thrift.I64, 3)
-		offset += bthrift.Binary.WriteI64(buf[offset:], *p.UserId)
+	if p.IsSetToUserId() {
+		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "to_user_id", thrift.I64, 3)
+		offset += bthrift.Binary.WriteI64(buf[offset:], *p.ToUserId)
 
 		offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	}
@@ -1500,8 +1500,8 @@ func (p *UserInfoRequest) fastWriteField4(buf []byte, binaryWriter bthrift.Binar
 
 func (p *UserInfoRequest) field1Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("to_user_id", thrift.I64, 1)
-	l += bthrift.Binary.I64Length(p.ToUserId)
+	l += bthrift.Binary.FieldBeginLength("user_id", thrift.I64, 1)
+	l += bthrift.Binary.I64Length(p.UserId)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l
@@ -1518,9 +1518,9 @@ func (p *UserInfoRequest) field2Length() int {
 
 func (p *UserInfoRequest) field3Length() int {
 	l := 0
-	if p.IsSetUserId() {
-		l += bthrift.Binary.FieldBeginLength("user_id", thrift.I64, 3)
-		l += bthrift.Binary.I64Length(*p.UserId)
+	if p.IsSetToUserId() {
+		l += bthrift.Binary.FieldBeginLength("to_user_id", thrift.I64, 3)
+		l += bthrift.Binary.I64Length(*p.ToUserId)
 
 		l += bthrift.Binary.FieldEndLength()
 	}

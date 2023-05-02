@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"errors"
+	"gorm.io/gorm"
 	"log"
 	"simple_tiktok/dal/db/model"
 )
@@ -24,6 +26,9 @@ func GetUserById(ctx context.Context, userId int64) (*model.User, error) {
 	var user model.User
 	err := DB.WithContext(ctx).Model(model.User{}).Where("id = ?", userId).First(&user).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		log.Printf("Get User by Id error: %v", err)
 		return nil, err
 	}
@@ -34,7 +39,9 @@ func GetUserByName(ctx context.Context, name string) (*model.User, error) {
 	var user model.User
 	err := DB.WithContext(ctx).Model(model.User{}).Where("name = ?", name).First(&user).Error
 	if err != nil {
-		log.Printf("Get User by Id error: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &user, nil

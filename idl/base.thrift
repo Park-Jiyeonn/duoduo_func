@@ -33,9 +33,9 @@ struct LoginResponse {
 }
 
 struct UserInfoRequest {
-    1: i64 to_user_id
+    1: i64 user_id
     2: string token
-    3: optional i64 user_id
+    3: optional i64 to_user_id
     4: optional string username
 }
 

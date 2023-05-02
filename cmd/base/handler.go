@@ -23,11 +23,6 @@ func (s *BaseServiceImpl) UserRegister(ctx context.Context, request *base.Regist
 	resp = new(base.RegisterResponse)
 
 	user, err := db.GetUserByName(ctx, request.Username)
-	if err != nil {
-		resp.StatusCode = 1
-		resp.StatusMsg = "数据库查询用户存不存在失败"
-		return resp, err
-	}
 	if user != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("用户已存在")
@@ -97,14 +92,14 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 	resp.StatusMsg = &message
 
 	var user *model.User
-	if redis.UserIsExists(ctx, req.ToUserId) != 0 {
-		user, err = redis.GetUserInfo(ctx, req.ToUserId)
+	if redis.UserIsExists(ctx, req.UserId) != 0 {
+		user, err = redis.GetUserInfo(ctx, req.UserId)
 		resp.StatusCode = 1
 		if err != nil {
 			return resp, err
 		}
 	} else {
-		user, err = db.GetUserById(ctx, req.ToUserId)
+		user, err = db.GetUserById(ctx, req.UserId)
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("数据库查询失败")
@@ -114,10 +109,10 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 		redis.SetUserInfo(ctx, user)
 	}
 
-	if redis.FollowIsExists(ctx, req.ToUserId) != 0 {
-		resp.User.IsFollow = redis.IsFollow(ctx, *req.UserId, req.ToUserId)
+	if redis.FollowIsExists(ctx, req.UserId) != 0 {
+		resp.User.IsFollow = redis.IsFollow(ctx, *req.ToUserId, req.UserId)
 	} else {
-		resp.User.IsFollow, err = db.IsFollowed(ctx, *req.UserId, req.ToUserId)
+		resp.User.IsFollow, err = db.IsFollowed(ctx, *req.ToUserId, req.UserId)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +122,7 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 		} else {
 			action = 0
 		}
-		redis.FollowAction(ctx, *req.UserId, req.ToUserId, action)
+		redis.FollowAction(ctx, *req.ToUserId, req.UserId, action)
 	}
 
 	resp.StatusCode = 0

@@ -1587,9 +1587,9 @@ func (p *LoginResponse) Field4DeepEqual(src *string) bool {
 }
 
 type UserInfoRequest struct {
-	ToUserId int64   `thrift:"to_user_id,1" frugal:"1,default,i64" json:"to_user_id"`
+	UserId   int64   `thrift:"user_id,1" frugal:"1,default,i64" json:"user_id"`
 	Token    string  `thrift:"token,2" frugal:"2,default,string" json:"token"`
-	UserId   *int64  `thrift:"user_id,3,optional" frugal:"3,optional,i64" json:"user_id,omitempty"`
+	ToUserId *int64  `thrift:"to_user_id,3,optional" frugal:"3,optional,i64" json:"to_user_id,omitempty"`
 	Username *string `thrift:"username,4,optional" frugal:"4,optional,string" json:"username,omitempty"`
 }
 
@@ -1601,21 +1601,21 @@ func (p *UserInfoRequest) InitDefault() {
 	*p = UserInfoRequest{}
 }
 
-func (p *UserInfoRequest) GetToUserId() (v int64) {
-	return p.ToUserId
+func (p *UserInfoRequest) GetUserId() (v int64) {
+	return p.UserId
 }
 
 func (p *UserInfoRequest) GetToken() (v string) {
 	return p.Token
 }
 
-var UserInfoRequest_UserId_DEFAULT int64
+var UserInfoRequest_ToUserId_DEFAULT int64
 
-func (p *UserInfoRequest) GetUserId() (v int64) {
-	if !p.IsSetUserId() {
-		return UserInfoRequest_UserId_DEFAULT
+func (p *UserInfoRequest) GetToUserId() (v int64) {
+	if !p.IsSetToUserId() {
+		return UserInfoRequest_ToUserId_DEFAULT
 	}
-	return *p.UserId
+	return *p.ToUserId
 }
 
 var UserInfoRequest_Username_DEFAULT string
@@ -1626,28 +1626,28 @@ func (p *UserInfoRequest) GetUsername() (v string) {
 	}
 	return *p.Username
 }
-func (p *UserInfoRequest) SetToUserId(val int64) {
-	p.ToUserId = val
+func (p *UserInfoRequest) SetUserId(val int64) {
+	p.UserId = val
 }
 func (p *UserInfoRequest) SetToken(val string) {
 	p.Token = val
 }
-func (p *UserInfoRequest) SetUserId(val *int64) {
-	p.UserId = val
+func (p *UserInfoRequest) SetToUserId(val *int64) {
+	p.ToUserId = val
 }
 func (p *UserInfoRequest) SetUsername(val *string) {
 	p.Username = val
 }
 
 var fieldIDToName_UserInfoRequest = map[int16]string{
-	1: "to_user_id",
+	1: "user_id",
 	2: "token",
-	3: "user_id",
+	3: "to_user_id",
 	4: "username",
 }
 
-func (p *UserInfoRequest) IsSetUserId() bool {
-	return p.UserId != nil
+func (p *UserInfoRequest) IsSetToUserId() bool {
+	return p.ToUserId != nil
 }
 
 func (p *UserInfoRequest) IsSetUsername() bool {
@@ -1747,7 +1747,7 @@ func (p *UserInfoRequest) ReadField1(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.ToUserId = v
+		p.UserId = v
 	}
 	return nil
 }
@@ -1765,7 +1765,7 @@ func (p *UserInfoRequest) ReadField3(iprot thrift.TProtocol) error {
 	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
-		p.UserId = &v
+		p.ToUserId = &v
 	}
 	return nil
 }
@@ -1821,10 +1821,10 @@ WriteStructEndError:
 }
 
 func (p *UserInfoRequest) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("to_user_id", thrift.I64, 1); err != nil {
+	if err = oprot.WriteFieldBegin("user_id", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI64(p.ToUserId); err != nil {
+	if err := oprot.WriteI64(p.UserId); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1855,11 +1855,11 @@ WriteFieldEndError:
 }
 
 func (p *UserInfoRequest) writeField3(oprot thrift.TProtocol) (err error) {
-	if p.IsSetUserId() {
-		if err = oprot.WriteFieldBegin("user_id", thrift.I64, 3); err != nil {
+	if p.IsSetToUserId() {
+		if err = oprot.WriteFieldBegin("to_user_id", thrift.I64, 3); err != nil {
 			goto WriteFieldBeginError
 		}
-		if err := oprot.WriteI64(*p.UserId); err != nil {
+		if err := oprot.WriteI64(*p.ToUserId); err != nil {
 			return err
 		}
 		if err = oprot.WriteFieldEnd(); err != nil {
@@ -1905,13 +1905,13 @@ func (p *UserInfoRequest) DeepEqual(ano *UserInfoRequest) bool {
 	} else if p == nil || ano == nil {
 		return false
 	}
-	if !p.Field1DeepEqual(ano.ToUserId) {
+	if !p.Field1DeepEqual(ano.UserId) {
 		return false
 	}
 	if !p.Field2DeepEqual(ano.Token) {
 		return false
 	}
-	if !p.Field3DeepEqual(ano.UserId) {
+	if !p.Field3DeepEqual(ano.ToUserId) {
 		return false
 	}
 	if !p.Field4DeepEqual(ano.Username) {
@@ -1922,7 +1922,7 @@ func (p *UserInfoRequest) DeepEqual(ano *UserInfoRequest) bool {
 
 func (p *UserInfoRequest) Field1DeepEqual(src int64) bool {
 
-	if p.ToUserId != src {
+	if p.UserId != src {
 		return false
 	}
 	return true
@@ -1936,12 +1936,12 @@ func (p *UserInfoRequest) Field2DeepEqual(src string) bool {
 }
 func (p *UserInfoRequest) Field3DeepEqual(src *int64) bool {
 
-	if p.UserId == src {
+	if p.ToUserId == src {
 		return true
-	} else if p.UserId == nil || src == nil {
+	} else if p.ToUserId == nil || src == nil {
 		return false
 	}
-	if *p.UserId != *src {
+	if *p.ToUserId != *src {
 		return false
 	}
 	return true
