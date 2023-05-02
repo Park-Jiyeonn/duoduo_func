@@ -191,9 +191,9 @@ func (s *InteractServiceImpl) CommentAction(ctx context.Context, request *intera
 	message := ""
 	resp.StatusMsg = &message
 
-	var newComment = db.Comment{
-		UserID:      *request.UserId,
-		VideoID:     request.VideoId,
+	var newComment = model.Comment{
+		UserId:      *request.UserId,
+		VideoId:     request.VideoId,
 		Content:     "",
 		PublishDate: time.Now().Format("2006-01-02 15:04:05"),
 	}
@@ -248,10 +248,10 @@ func (s *InteractServiceImpl) CommentAction(ctx context.Context, request *intera
 // GetCommentList implements the InteractServiceImpl interface.
 func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *interact.CommentListRequest) (resp *interact.CommentListResponse, err error) {
 	// TODO: Your code here...
-	resp = new(interact.CommentListResponse)
+	resp = interact.NewCommentListResponse()
 	message := ""
 	resp.StatusMsg = &message
-	comments, err := db.QueryCommentByVideoID(ctx, request.VideoId)
+	comments, err := db.GetCommentList(ctx, request.VideoId)
 	fmt.Println(comments)
 	if err != nil {
 		resp.StatusCode = 1
@@ -259,7 +259,7 @@ func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *inter
 	}
 	var commentList []*interact.CommentInfo
 	for _, v := range comments {
-		user, err := db.GetUserById(ctx, v.UserID)
+		user, err := db.GetUserById(ctx, v.UserId)
 		if err != nil {
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("根据视频评论的ID查询用户失败！")
@@ -274,7 +274,7 @@ func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *inter
 				IsFollow:      false,
 			},
 			Content:    v.Content,
-			CreateDate: v.PublishDate,
+			CreateDate: v.CreatedAt.String(),
 		}
 		commentList = append(commentList, newComment)
 	}

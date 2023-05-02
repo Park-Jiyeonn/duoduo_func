@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/db/model"
 	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	social "simple_tiktok/kitex_gen/social"
@@ -167,8 +168,8 @@ func (s *SocialServiceImpl) MessageChat(ctx context.Context, req *social.Message
 	for i := 0; i < len(sendMessages); i++ {
 		var msg social.Message
 		msg.Id = int64(sendMessages[i].ID)
-		msg.ToUserId = sendMessages[i].ToUserID
-		msg.FromUserId = sendMessages[i].UserID
+		msg.ToUserId = sendMessages[i].ToUserId
+		msg.FromUserId = sendMessages[i].UserId
 		msg.Content = sendMessages[i].Content
 		msg.CreateTime = &sendMessages[i].PublishDate
 		MessageList[i] = &msg
@@ -176,8 +177,8 @@ func (s *SocialServiceImpl) MessageChat(ctx context.Context, req *social.Message
 	for i := len(sendMessages); i < len(sendMessages)+len(reciveMessage); i++ {
 		var msg social.Message
 		msg.Id = int64(reciveMessage[i-len(sendMessages)].ID)
-		msg.ToUserId = reciveMessage[i-len(sendMessages)].ToUserID
-		msg.FromUserId = reciveMessage[i-len(sendMessages)].UserID
+		msg.ToUserId = reciveMessage[i-len(sendMessages)].ToUserId
+		msg.FromUserId = reciveMessage[i-len(sendMessages)].UserId
 		msg.Content = reciveMessage[i-len(sendMessages)].Content
 		msg.CreateTime = &reciveMessage[i-len(sendMessages)].PublishDate
 		MessageList[i] = &msg
@@ -199,9 +200,9 @@ func (s *SocialServiceImpl) MessageAction(ctx context.Context, req *social.Messa
 	resp = new(social.MessageActionResp)
 	mes := ""
 	resp.StatusMsg = &mes
-	newMessage := &db.Message{
-		UserID:      *req.UserId,
-		ToUserID:    req.ToUserId,
+	newMessage := &model.Message{
+		UserId:      *req.UserId,
+		ToUserId:    req.ToUserId,
 		Content:     req.Content,
 		PublishDate: time.Now().Unix(),
 	}

@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"simple_tiktok/dal/db"
+	"simple_tiktok/dal/db/model"
 	"simple_tiktok/pkg/consts"
 	"simple_tiktok/pkg/errno"
 )
 
 // SendComment 将评论发送到消息队列
-func SendComment(comment *db.Comment) error {
+func SendComment(comment *model.Comment) error {
 	// 连接到 RabbitMQ
 	conn, err := amqp.Dial(consts.RabbitMQDSN)
 	if err != nil {
@@ -122,12 +123,12 @@ func ReceiveMessage(ctx context.Context) error {
 	}
 	for d := range msgs {
 		// 将消息反序列化为 Comment 结构体
-		var comment db.Comment
+		var comment model.Comment
 		if err := json.Unmarshal(d.Body, &comment); err != nil {
 			return errno.NewErrNo("解析JSON数据失败！" + err.Error())
 		}
 		// 保存评论到数据库
-		if err := db.CreateComment(ctx, &comment); err != nil {
+		if err := db.CreateComment(ctx, &model.Comment{}); err != nil {
 			return errno.NewErrNo("消息队列保存到数据库失败！" + err.Error())
 		}
 	}
