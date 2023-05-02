@@ -30,14 +30,14 @@ func FavoriteAction(ctx context.Context, uid, vid int64, action int64) bool {
 	return HIncr(ctx, consts.GetUserLikeKey(uid), strconv.FormatInt(vid, 10), action)
 }
 
-func GetAllUserLikes(ctx context.Context, uid int64) (userLikes []*int64) {
-	userLikes = make([]*int64, 0)
+func GetAllUserLikes(ctx context.Context, uid int64) (userLikes []int64) {
+	userLikes = make([]int64, 0)
 	res := HGetAll(ctx, consts.GetUserLikeKey(uid))
 	for k, v := range res {
 		vid, _ := strconv.ParseInt(k, 10, 64)
 		action, _ := strconv.ParseInt(v, 10, 64)
 		if action == 1 {
-			userLikes = append(userLikes, &vid)
+			userLikes = append(userLikes, vid)
 		}
 	}
 	return

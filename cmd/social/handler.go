@@ -32,7 +32,7 @@ func (s *SocialServiceImpl) FollowAction(ctx context.Context, req *social.Follow
 		if len(userList) > 0 {
 			kv := make([]string, 0)
 			for _, user := range userList {
-				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, strconv.FormatInt(user, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFollowList(ctx, userId, kv...) {
@@ -50,7 +50,7 @@ func (s *SocialServiceImpl) FollowAction(ctx context.Context, req *social.Follow
 		if len(userList) > 0 {
 			kv := make([]string, 0)
 			for _, user := range userList {
-				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, strconv.FormatInt(user, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFollowerList(ctx, toUserId, kv...) {
@@ -129,7 +129,7 @@ func (s *SocialServiceImpl) GetFollowList(ctx context.Context, req *social.Follo
 		if len(followidList) > 0 {
 			kv := make([]string, 0)
 			for _, user := range followidList {
-				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, strconv.FormatInt(user, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFollowList(ctx, userId, kv...) {
@@ -194,7 +194,7 @@ func (s *SocialServiceImpl) GetFollowerList(ctx context.Context, req *social.Fol
 		if len(followeridList) > 0 {
 			kv := make([]string, 0)
 			for _, user := range followeridList {
-				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, strconv.FormatInt(user, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFollowerList(ctx, userId, kv...) {
@@ -257,7 +257,7 @@ func (s *SocialServiceImpl) GetFriendList(ctx context.Context, req *social.Frien
 		if len(followList) > 0 {
 			kv := make([]string, 0)
 			for _, user := range followList {
-				kv = append(kv, strconv.FormatInt(*user, 10))
+				kv = append(kv, strconv.FormatInt(user, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFollowList(ctx, userId, kv...) {
@@ -280,7 +280,7 @@ func (s *SocialServiceImpl) GetFriendList(ctx context.Context, req *social.Frien
 			if len(userList) > 0 {
 				kv := make([]string, 0)
 				for _, user := range userList {
-					kv = append(kv, strconv.FormatInt(*user, 10))
+					kv = append(kv, strconv.FormatInt(user, 10))
 					kv = append(kv, "1")
 				}
 				if !redis.SetFollowList(ctx, followerId, kv...) {

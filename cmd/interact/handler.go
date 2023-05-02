@@ -31,7 +31,7 @@ func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.Like
 		if len(likeList) > 0 {
 			kv := make([]string, 0)
 			for _, videoId := range likeList {
-				kv = append(kv, strconv.FormatInt(*videoId, 10))
+				kv = append(kv, strconv.FormatInt(videoId, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFavoriteList(ctx, *req.UserId, kv...) {
@@ -113,7 +113,7 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, req *interact.Lik
 	message := ""
 	resp.StatusMsg = &message
 
-	var likeList []*int64
+	var likeList []int64
 	if redis.LikeIsExists(ctx, req.UserId) == 0 {
 		likeList, err = db.GetUserLikeRecords(ctx, req.UserId)
 		if err != nil {
@@ -123,7 +123,7 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, req *interact.Lik
 		if len(likeList) > 0 {
 			kv := make([]string, 0)
 			for _, videoId := range likeList {
-				kv = append(kv, strconv.FormatInt(*videoId, 10))
+				kv = append(kv, strconv.FormatInt(videoId, 10))
 				kv = append(kv, "1")
 			}
 			if !redis.SetFavoriteList(ctx, req.UserId, kv...) {
@@ -138,14 +138,14 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, req *interact.Lik
 	var videoList []*base.VideoInfo
 	for _, vid := range likeList {
 		var video *model.Video
-		if redis.VideoIsExists(ctx, *vid) == 0 {
-			video, err = db.GetVideoByVideoId(ctx, *vid)
+		if redis.VideoIsExists(ctx, vid) == 0 {
+			video, err = db.GetVideoByVideoId(ctx, vid)
 			if err != nil {
 				return nil, err
 			}
 			redis.SetVideoMessage(ctx, video)
 		} else {
-			video, err = redis.GetVideoMessage(ctx, *vid)
+			video, err = redis.GetVideoMessage(ctx, vid)
 		}
 
 		var user *model.User
@@ -160,7 +160,7 @@ func (s *InteractServiceImpl) GetLikeList(ctx context.Context, req *interact.Lik
 		}
 
 		retVideo := &base.VideoInfo{
-			Id: *vid,
+			Id: vid,
 			Author: &base.UserInfo{
 				Id:            video.UserId,
 				Name:          user.Name,

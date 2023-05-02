@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"simple_tiktok/dal/db"
@@ -12,6 +13,7 @@ import (
 	util "simple_tiktok/util/ffmpeg"
 	"simple_tiktok/util/jwt"
 	"strconv"
+	"time"
 )
 
 // BaseServiceImpl implements the last service interface defined in the IDL.
@@ -109,15 +111,16 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 		redis.SetUserInfo(ctx, user)
 	}
 
+	isFollow := false
 	if redis.FollowIsExists(ctx, req.UserId) != 0 {
-		resp.User.IsFollow = redis.IsFollow(ctx, *req.ToUserId, req.UserId)
+		isFollow = redis.IsFollow(ctx, *req.ToUserId, req.UserId)
 	} else {
-		resp.User.IsFollow, err = db.IsFollowed(ctx, *req.ToUserId, req.UserId)
+		isFollow, err = db.IsFollowed(ctx, *req.ToUserId, req.UserId)
 		if err != nil {
 			return nil, err
 		}
 		var action int64
-		if resp.User.IsFollow {
+		if isFollow {
 			action = 1
 		} else {
 			action = 0
@@ -132,7 +135,7 @@ func (s *BaseServiceImpl) GetUserInfo(ctx context.Context, req *base.UserInfoReq
 		Name:          user.Name,
 		FollowCount:   user.FollowCount,
 		FollowerCount: user.FollowerCount,
-		IsFollow:      false,
+		IsFollow:      isFollow,
 	}
 	return resp, nil
 }
@@ -142,7 +145,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 	// TODO: Your code here...
 	resp = base.NewFeedResponse()
 	message := ""
-	nextTime := int64(114514)
+	nextTime := time.Now().Unix()
 	resp.StatusMsg = &message
 	resp.NextTime = &nextTime
 
@@ -150,6 +153,9 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 	if err != nil {
 		return resp, errno.NewErrNo("转换数字时间失败")
 	}
+	fmt.Println("====================================================")
+	fmt.Println("时间：", latestTime)
+	fmt.Println("====================================================")
 	videos, err := db.MGetByTime(ctx, int64(latestTime))
 	if err != nil {
 		resp.StatusCode = 1
@@ -174,7 +180,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 		}
 
 		if redis.VideoIsExists(ctx, int64(video.ID)) == 0 {
-			redis.SetVideoMessage(ctx, video)
+			redis.SetVideoMessage(ctx, &video)
 		}
 
 		isLike := false
@@ -278,8 +284,10 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, req *base.PublishL
 			return nil, err
 		}
 	}
-
 	videos, err := db.GetVideosByUserId(ctx, int64(user.ID))
+	fmt.Println("---------------------------------------------------------------")
+	fmt.Println(*user)
+	fmt.Println("---------------------------------------------------------------")
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("没找到视频相关信息，寄")
@@ -297,7 +305,7 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, req *base.PublishL
 			if len(userLikes) > 0 {
 				kv := make([]string, 0)
 				for _, userLike := range userLikes {
-					kv = append(kv, strconv.FormatInt(*userLike, 10))
+					kv = append(kv, strconv.FormatInt(userLike, 10))
 					kv = append(kv, "1")
 				}
 				if !redis.SetFavoriteList(ctx, req.UserId, kv...) {

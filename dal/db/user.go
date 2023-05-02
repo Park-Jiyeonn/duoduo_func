@@ -30,7 +30,7 @@ func GetUserById(ctx context.Context, userId int64) (*model.User, error) {
 			return nil, nil
 		}
 		log.Printf("Get User by Id error: %v", err)
-		return nil, err
+		return &user, err
 	}
 	return &user, nil
 }
@@ -42,7 +42,7 @@ func GetUserByName(ctx context.Context, name string) (*model.User, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		return nil, err
+		return &user, err
 	}
 	return &user, nil
 }

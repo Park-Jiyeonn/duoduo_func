@@ -8,15 +8,15 @@ import (
 	"simple_tiktok/dal/db/model"
 )
 
-func GetUserLikeRecords(ctx context.Context, uid int64) ([]*int64, error) {
-	var likeVideoIds []*int64
+func GetUserLikeRecords(ctx context.Context, uid int64) ([]int64, error) {
+	var likeVideoIds []int64
 	err := DB.WithContext(ctx).Model(model.Like{}).
 		Select("video_id").
 		Where("user_id = ? AND action=1", uid).
-		Find(likeVideoIds).Error
+		Find(&likeVideoIds).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return likeVideoIds, nil
 		}
 		return nil, err
 	}
@@ -27,9 +27,12 @@ func HasLiked(ctx context.Context, uid, vid int64) (bool, error) {
 	var ret bool
 	err := DB.WithContext(ctx).Model(model.Like{}).
 		Select("action").
-		Where("uid=? AND vid=?", uid, vid).
+		Where("user_id=? AND video_id=?", uid, vid).
 		First(&ret).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, err
 	}
 	return ret, nil

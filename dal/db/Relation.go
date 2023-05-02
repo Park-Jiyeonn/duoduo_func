@@ -8,30 +8,30 @@ import (
 	"simple_tiktok/dal/db/model"
 )
 
-func GetFollowList(ctx context.Context, uid int64) ([]*int64, error) {
-	var userIds []*int64
+func GetFollowList(ctx context.Context, uid int64) ([]int64, error) {
+	var userIds []int64
 	err := DB.WithContext(ctx).Model(model.Relation{}).
 		Select("to_user_id").
 		Where("user_id = ? AND action = 1", uid).
-		Find(userIds).Error
+		Find(&userIds).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return userIds, nil
 		}
 		return nil, err
 	}
 	return userIds, nil
 }
 
-func GetFollowerList(ctx context.Context, uid int64) ([]*int64, error) {
-	var userIds []*int64
+func GetFollowerList(ctx context.Context, uid int64) ([]int64, error) {
+	var userIds []int64
 	err := DB.WithContext(ctx).Model(model.Relation{}).
 		Select("user_id").
 		Where("to_user_id = ? AND action = 1", uid).
-		Find(userIds).Error
+		Find(&userIds).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return userIds, nil
 		}
 		return nil, err
 	}

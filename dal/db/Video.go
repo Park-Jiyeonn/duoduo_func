@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"gorm.io/gorm"
 	"simple_tiktok/dal/db/model"
 )
@@ -24,21 +25,22 @@ func CreateVideo(ctx context.Context, playUrl string, coverUrl string, title str
 	return
 }
 
-func GetVideosByUserId(ctx context.Context, uid int64) ([]*model.Video, error) {
-	var videos []*model.Video
-	err := DB.WithContext(ctx).Model(model.Video{}).Where("user_id = ?", uid).Find(videos).Error
+func GetVideosByUserId(ctx context.Context, uid int64) ([]model.Video, error) {
+	var videos []model.Video
+	fmt.Println(uid)
+	err := DB.WithContext(ctx).Model(model.Video{}).Where("user_id = ?", uid).Find(&videos).Error
 	if err != nil {
-		return nil, err
+		return videos, err
 	}
 	return videos, nil
 }
 
-func MGetByTime(ctx context.Context, latestTime int64) ([]*model.Video, error) {
-	tx := DB.WithContext(ctx).Model(model.Video{}).Where("unix_timestamp(created_at) <= ?", latestTime)
-	var videos []*model.Video
-	err := tx.Order("created_at desc").Limit(30).Find(videos).Error
+func MGetByTime(ctx context.Context, latestTime int64) ([]model.Video, error) {
+	tx := DB.WithContext(ctx).Model(model.Video{})
+	var videos []model.Video
+	err := tx.Order("created_at desc").Limit(30).Find(&videos).Error
 	if err != nil {
-		return nil, err
+		return videos, err
 	}
 	return videos, nil
 }
@@ -47,7 +49,7 @@ func GetVideoByVideoId(ctx context.Context, vid int64) (*model.Video, error) {
 	var video *model.Video
 	err := DB.WithContext(ctx).Model(model.Video{}).Where("id = ?", vid).First(video).Error
 	if err != nil {
-		return nil, err
+		return video, err
 	}
 	return video, nil
 }
