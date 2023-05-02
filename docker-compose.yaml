@@ -47,7 +47,7 @@ services:
     image: otel/opentelemetry-collector-contrib-dev:latest
     command: [ "--config=/etc/otel-collector-config.yaml", "${OTELCOL_ARGS}" ]
     volumes:
-      - ./pkg/configs/otel/otel-collector-config.yaml:/etc/otel/otel-collector-config.yaml
+      - ./pkg/configs/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - "1888:1888"   # pprof extension
       - "8888"        # Prometheus metrics exposed by the collector
