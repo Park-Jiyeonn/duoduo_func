@@ -9,16 +9,16 @@ func GetUserInfoKey(userId int64) string {
 	return fmt.Sprintf("user_info_%d", userId)
 }
 
-func GetUserFollowKey(userId int64) string {
-	return fmt.Sprintf("user_follow_%d", userId)
+func GetUserFollowListKey(userId int64) string {
+	return fmt.Sprintf("user_follow_list_%d", userId)
 }
 
-func GetUserFollowerKey(userID int64) string {
-	return fmt.Sprintf("user_follower_%d", userID)
+func GetUserFollowerListKey(userID int64) string {
+	return fmt.Sprintf("user_follower_list_%d", userID)
 }
 
-func GetUserLikeKey(userID int64) string {
-	return fmt.Sprintf("user_like_%d", userID)
+func GetUserLikeListKey(userID int64) string {
+	return fmt.Sprintf("user_like_list_%d", userID)
 }
 
 func GetVideoMsgKey(videoID int64) string {
@@ -31,12 +31,12 @@ func GetIDFromUserMsgKey(key string) (id int64) {
 }
 
 func GetIDFromUserLikeListKey(key string) (id int64) {
-	id, _ = strconv.ParseInt(key[10:], 10, 64)
+	id, _ = strconv.ParseInt(key[15:], 10, 64)
 	return
 }
 
 func GetIDFromUserFollowListKey(key string) (id int64) {
-	id, _ = strconv.ParseInt(key[12:], 10, 64)
+	id, _ = strconv.ParseInt(key[17:], 10, 64)
 	return
 }
 

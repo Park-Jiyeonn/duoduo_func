@@ -153,9 +153,6 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 	if err != nil {
 		return resp, errno.NewErrNo("转换数字时间失败")
 	}
-	fmt.Println("====================================================")
-	fmt.Println("时间：", latestTime)
-	fmt.Println("====================================================")
 	videos, err := db.MGetByTime(ctx, int64(latestTime))
 	if err != nil {
 		resp.StatusCode = 1
@@ -171,6 +168,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 			if err != nil {
 				return nil, err
 			}
+
 			redis.SetUserInfo(ctx, user)
 		} else {
 			user, err = redis.GetUserInfo(ctx, video.UserId)
@@ -195,7 +193,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 			if isLike {
 				action = 1
 			} else {
-				action = -1
+				action = 0
 			}
 			redis.FavoriteAction(ctx, *req.UserId, int64(video.ID), action)
 		}
@@ -209,7 +207,7 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 			if isFollow {
 				action = 1
 			} else {
-				action = -1
+				action = 0
 			}
 			redis.FollowAction(ctx, *req.UserId, int64(video.ID), action)
 		}

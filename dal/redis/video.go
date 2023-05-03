@@ -26,9 +26,10 @@ func GetVideoFields(ctx context.Context, vid int64, field ...string) []interface
 	return HMGet(ctx, consts.GetVideoMsgKey(vid), field...)
 }
 
-func GetVideoMessage(ctx context.Context, vid int64) (video *model.Video, err error) {
+func GetVideoMessage(ctx context.Context, vid int64) (*model.Video, error) {
 	key := consts.GetVideoMsgKey(vid)
 	value := HGetAll(ctx, key)
+	video := new(model.Video)
 	video.UserId = GetNum(value, "user_id")
 	video.Title = value["title"]
 	video.FavoriteCount = GetNum(value, "favorite_count")

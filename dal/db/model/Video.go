@@ -4,12 +4,12 @@ import "gorm.io/gorm"
 
 type Video struct {
 	gorm.Model
-	UserId        int64  `gorm:"column:user_id;not null;index:fk_user_video"`
-	Title         string `gorm:"column:title;type:varchar(128);not null"`
-	PlayUrl       string `gorm:"column:play_url;varchar(128);not null"`
-	CoverUrl      string `gorm:"column:cover_url;varchar(128);not null"`
-	FavoriteCount int64  `gorm:"column:favorite_count;default:0"`
-	CommentCount  int64  `gorm:"column:comment_count;default:0"`
+	UserId        int64  `gorm:"column:user_id;not null;index:fk_user_video" redis:"user_id"`
+	Title         string `gorm:"column:title;type:varchar(128);not null" redis:"title"`
+	PlayUrl       string `gorm:"column:play_url;varchar(128);not null" redis:"play_url"`
+	CoverUrl      string `gorm:"column:cover_url;varchar(128);not null" redis:"cover_url"`
+	FavoriteCount int64  `gorm:"column:favorite_count;default:0" redis:"favorite_count"`
+	CommentCount  int64  `gorm:"column:comment_count;default:0" redis:"comment_count"`
 }
 
 func (v *Video) TableName() string {

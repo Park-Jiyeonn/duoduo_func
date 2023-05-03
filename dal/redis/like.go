@@ -9,13 +9,13 @@ import (
 func LikeIsExists(ctx context.Context, uids ...int64) int64 {
 	keys := make([]string, len(uids))
 	for i, uid := range uids {
-		keys[i] = consts.GetUserLikeKey(uid)
+		keys[i] = consts.GetUserLikeListKey(uid)
 	}
 	return Exists(ctx, keys...)
 }
 
 func IsLike(ctx context.Context, uid, vid int64) bool {
-	res := HMGet(ctx, consts.GetUserLikeKey(uid), strconv.FormatInt(vid, 10))
+	res := HMGet(ctx, consts.GetUserLikeListKey(uid), strconv.FormatInt(vid, 10))
 	if res[0] == nil || res[0].(string) == "0" {
 		return false
 	}
@@ -23,16 +23,16 @@ func IsLike(ctx context.Context, uid, vid int64) bool {
 }
 
 func SetFavoriteList(ctx context.Context, userID int64, kv ...string) bool {
-	return HSet(ctx, consts.GetUserLikeKey(userID), kv)
+	return HSet(ctx, consts.GetUserLikeListKey(userID), kv)
 }
 
 func FavoriteAction(ctx context.Context, uid, vid int64, action int64) bool {
-	return HIncr(ctx, consts.GetUserLikeKey(uid), strconv.FormatInt(vid, 10), action)
+	return HIncr(ctx, consts.GetUserLikeListKey(uid), strconv.FormatInt(vid, 10), action)
 }
 
 func GetAllUserLikes(ctx context.Context, uid int64) (userLikes []int64) {
 	userLikes = make([]int64, 0)
-	res := HGetAll(ctx, consts.GetUserLikeKey(uid))
+	res := HGetAll(ctx, consts.GetUserLikeListKey(uid))
 	for k, v := range res {
 		vid, _ := strconv.ParseInt(k, 10, 64)
 		action, _ := strconv.ParseInt(v, 10, 64)
@@ -44,5 +44,5 @@ func GetAllUserLikes(ctx context.Context, uid int64) (userLikes []int64) {
 }
 
 func GetFavoriteList(ctx context.Context, userID int64) map[string]string {
-	return HGetAll(ctx, consts.GetUserLikeKey(userID))
+	return HGetAll(ctx, consts.GetUserLikeListKey(userID))
 }

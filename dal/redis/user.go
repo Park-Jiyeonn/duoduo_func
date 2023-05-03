@@ -23,7 +23,7 @@ func GetNum(f map[string]string, s string) int64 {
 func GetUserInfo(ctx context.Context, uid int64) (*model.User, error) {
 	key := consts.GetUserInfoKey(uid)
 	value := HGetAll(ctx, key)
-	var user *model.User
+	var user = new(model.User)
 	user.Name = value["name"]
 	user.ID = uint(GetNum(value, "id"))
 	user.FollowCount = GetNum(value, "follow_count")

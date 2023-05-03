@@ -73,7 +73,7 @@ func UpdateUserLikeListToDB(ctx context.Context) {
 
 func UpdateUserFollowListToDB(ctx context.Context) {
 	var cursor uint64
-	keys, _, err := Rs.Scan(ctx, cursor, "user_follow_*", 0).Result()
+	keys, _, err := Rs.Scan(ctx, cursor, "user_follow_list*", 0).Result()
 	if err != nil {
 		return
 	}

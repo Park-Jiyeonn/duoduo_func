@@ -6,11 +6,11 @@ require (
 	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/hertz v0.5.2
 	github.com/cloudwego/kitex v0.4.4
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.1
 	github.com/kitex-contrib/obs-opentelemetry/logging/logrus v0.0.0-20230219092456-5e6c84962323
 	github.com/kitex-contrib/registry-etcd v0.1.0
+	github.com/redis/go-redis/v9 v9.0.4
 	github.com/streadway/amqp v1.0.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gorm.io/driver/mysql v1.4.7

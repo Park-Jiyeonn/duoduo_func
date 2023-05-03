@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 var Rs *redis.Client
@@ -18,4 +18,6 @@ func InitRedis() {
 	if err != nil {
 		panic(err)
 	}
+
+	SyncDataToDB()
 }
