@@ -47,7 +47,7 @@ func MGetByTime(ctx context.Context, latestTime int64) ([]model.Video, error) {
 
 func GetVideoByVideoId(ctx context.Context, vid int64) (*model.Video, error) {
 	var video *model.Video
-	err := DB.WithContext(ctx).Model(model.Video{}).Where("id = ?", vid).First(video).Error
+	err := DB.WithContext(ctx).Model(model.Video{}).Where("id = ?", vid).First(&video).Error
 	if err != nil {
 		return video, err
 	}

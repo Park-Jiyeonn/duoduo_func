@@ -39,6 +39,7 @@ func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.Like
 			}
 		}
 	}
+	fmt.Println("1--------------------------------------------")
 	if redis.UserIsExists(ctx, *req.UserId) == 0 {
 		user, err := db.GetUserById(ctx, *req.UserId)
 		if err != nil {

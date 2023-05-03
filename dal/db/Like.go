@@ -44,7 +44,7 @@ func UpdateAndInsertLikeRecord(ctx context.Context, uid, vid int64, action bool)
 		VideoId: vid,
 		Action:  action,
 	}
-	err := DB.WithContext(ctx).Model(model.Like{}).
+	err := DB.WithContext(ctx).
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}, {Name: "video_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"action"}),

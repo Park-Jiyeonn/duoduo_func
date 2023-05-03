@@ -59,11 +59,11 @@ func UpdateAndInsertRelation(ctx context.Context, uid, toUserId int64, action bo
 		ToUserId: toUserId,
 		Action:   action,
 	}
-	err := DB.WithContext(ctx).Model(model.Relation{}).
+	err := DB.WithContext(ctx).
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}, {Name: "to_user_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"action"}),
-		}).Create(relation).Error
+		}).Create(&relation).Error
 	if err != nil {
 		return err
 	}

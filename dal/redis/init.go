@@ -2,7 +2,9 @@ package redis
 
 import (
 	"context"
+	"github.com/go-co-op/gocron"
 	"github.com/redis/go-redis/v9"
+	"time"
 )
 
 var Rs *redis.Client
@@ -19,5 +21,7 @@ func InitRedis() {
 		panic(err)
 	}
 
-	SyncDataToDB()
+	s := gocron.NewScheduler(time.Local)
+	_, _ = s.Every(5).Minutes().Do(SyncDataToDB)
+	s.StartBlocking()
 }
