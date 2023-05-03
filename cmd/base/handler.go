@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"simple_tiktok/dal/db"
@@ -179,6 +178,13 @@ func (s *BaseServiceImpl) GetVideoList(ctx context.Context, req *base.FeedReques
 
 		if redis.VideoIsExists(ctx, int64(video.ID)) == 0 {
 			redis.SetVideoMessage(ctx, &video)
+		} else {
+			latestVideo, err := redis.GetVideoMessage(ctx, int64(video.ID))
+			if err != nil {
+				return nil, errno.NewErrNo("redis获取最新视频信息失败")
+			}
+			video.FavoriteCount = latestVideo.FavoriteCount
+			video.CommentCount = latestVideo.CommentCount
 		}
 
 		isLike := false
@@ -269,7 +275,7 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, req *base.PublishL
 	message := ""
 	resp.StatusMsg = &message
 
-	var user *model.User
+	var user = new(model.User)
 	if redis.UserIsExists(ctx, req.UserId) == 0 {
 		user, err = db.GetUserById(ctx, req.UserId)
 		if err != nil {
@@ -282,10 +288,9 @@ func (s *BaseServiceImpl) GetPublishList(ctx context.Context, req *base.PublishL
 			return nil, err
 		}
 	}
+
 	videos, err := db.GetVideosByUserId(ctx, int64(user.ID))
-	fmt.Println("---------------------------------------------------------------")
-	fmt.Println(*user)
-	fmt.Println("---------------------------------------------------------------")
+
 	if err != nil {
 		resp.StatusCode = 1
 		return resp, errno.NewErrNo("没找到视频相关信息，寄")

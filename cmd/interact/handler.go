@@ -21,7 +21,6 @@ type InteractServiceImpl struct{}
 func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.LikeRequest) (resp *interact.LikeResponse, err error) {
 	// TODO: Your code here...
 	resp = interact.NewLikeResponse()
-
 	if redis.LikeIsExists(ctx, *req.UserId) == 0 {
 		likeList, err := db.GetUserLikeRecords(ctx, *req.UserId)
 		if err != nil {
@@ -51,7 +50,7 @@ func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.Like
 			return resp, errno.NewErrNo("Redis缓存用户信息出错")
 		}
 	}
-	if redis.LikeIsExists(ctx, req.VideoId) != 0 {
+	if redis.VideoIsExists(ctx, req.VideoId) == 0 {
 		video, err := db.GetVideoByVideoId(ctx, req.VideoId)
 		if err != nil {
 			return nil, err
@@ -62,7 +61,7 @@ func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.Like
 	}
 	res := redis.GetVideoFields(ctx, req.VideoId, "user_id")
 	authorID, _ := strconv.ParseInt(res[0].(string), 10, 64)
-	if redis.UserIsExists(ctx, *req.UserId) == 0 {
+	if redis.UserIsExists(ctx, authorID) == 0 {
 		user, err := db.GetUserById(ctx, authorID)
 		if err != nil {
 			resp.StatusCode = 1
@@ -223,6 +222,7 @@ func (s *InteractServiceImpl) CommentAction(ctx context.Context, request *intera
 			resp.StatusCode = 1
 			return resp, errno.NewErrNo("删除评论失败！")
 		}
+		redis.IncrVideoField(ctx, *request.CommentId, "comment_id", -1)
 	}
 
 	resp.StatusCode = 0
@@ -255,7 +255,7 @@ func (s *InteractServiceImpl) GetCommentList(ctx context.Context, request *inter
 	fmt.Println(comments)
 	if err != nil {
 		resp.StatusCode = 1
-		return resp, errno.NewErrNo("创建评论失败！")
+		return resp, errno.NewErrNo("查询评论失败！")
 	}
 	var commentList []*interact.CommentInfo
 	for _, v := range comments {

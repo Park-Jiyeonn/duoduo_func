@@ -202,8 +202,8 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp, err := RpcBase.GetPublishList(ctx, &base.PublishListRequest{
-		UserId:  req.UserID,
-		QueryId: req.QueryID,
+		UserId: req.UserID,
+		Token:  req.Token,
 	})
 	if err != nil {
 		resp = new(base.PublishListResponse)

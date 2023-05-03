@@ -6,6 +6,16 @@ import (
 	"simple_tiktok/pkg/consts"
 )
 
+type redisVideo struct {
+	Id            int64  `json:"id" redis:"id"`
+	UserId        int64  `json:"user_id" redis:"user_id"`
+	PlayUrl       string `json:"play_url" redis:"play_url"`
+	CoverUrl      string `json:"cover_url" redis:"cover_url"`
+	FavoriteCount int64  `json:"favorite_count" redis:"favorite_count"`
+	CommentCount  int64  `json:"comment_count" redis:"comment_count"`
+	Title         string `json:"title" redis:"title"`
+}
+
 func VideoIsExists(ctx context.Context, vids ...int64) int64 {
 	keys := make([]string, len(vids))
 	for i, vid := range vids {
@@ -15,7 +25,15 @@ func VideoIsExists(ctx context.Context, vids ...int64) int64 {
 }
 
 func SetVideoMessage(ctx context.Context, video *model.Video) (ok bool) {
-	return HSet(ctx, consts.GetVideoMsgKey(int64(video.ID)), video)
+	return HSet(ctx, consts.GetVideoMsgKey(int64(video.ID)), &redisVideo{
+		Id:            int64(video.ID),
+		UserId:        video.UserId,
+		PlayUrl:       video.PlayUrl,
+		CoverUrl:      video.CoverUrl,
+		FavoriteCount: video.FavoriteCount,
+		CommentCount:  video.CommentCount,
+		Title:         video.Title,
+	})
 }
 
 func IncrVideoField(ctx context.Context, vid int64, field string, incr int64) (ok bool) {

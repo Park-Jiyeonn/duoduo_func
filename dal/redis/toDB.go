@@ -29,7 +29,7 @@ func UpdateUserMsgToDB(ctx context.Context) {
 		}
 		userMap := map[string]interface{}{
 			"id":             user.ID,
-			"username":       user.Name,
+			"name":           user.Name,
 			"follow_count":   user.FollowCount,
 			"follower_count": user.FollowerCount,
 			"work_count":     user.WorkCount,
@@ -118,7 +118,7 @@ func UpdateVideoMsgToDB(ctx context.Context) {
 			"favorite_count": video.FavoriteCount,
 			"comment_count":  video.CommentCount,
 			"title":          video.Title,
-			"uid":            video.UserId,
+			"user_id":        video.UserId,
 		}
 		err = db.UpdateVideo(ctx, vid, &videoMap)
 		if err != nil {

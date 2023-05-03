@@ -11,7 +11,7 @@ func GetCommentList(ctx context.Context, vid int64) ([]model.Comment, error) {
 	res := make([]model.Comment, 0)
 	err := DB.WithContext(ctx).
 		Model(model.Comment{}).
-		Where("vid = ?", vid).Find(&res).Error
+		Where("video_id = ?", vid).Find(&res).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return res, nil

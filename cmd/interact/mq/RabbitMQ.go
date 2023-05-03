@@ -6,6 +6,7 @@ import (
 	"github.com/streadway/amqp"
 	"simple_tiktok/dal/db"
 	"simple_tiktok/dal/db/model"
+	"simple_tiktok/dal/redis"
 	"simple_tiktok/pkg/consts"
 	"simple_tiktok/pkg/errno"
 )
@@ -128,9 +129,10 @@ func ReceiveMessage(ctx context.Context) error {
 			return errno.NewErrNo("解析JSON数据失败！" + err.Error())
 		}
 		// 保存评论到数据库
-		if err := db.CreateComment(ctx, &model.Comment{}); err != nil {
+		if err := db.CreateComment(ctx, &comment); err != nil {
 			return errno.NewErrNo("消息队列保存到数据库失败！" + err.Error())
 		}
+		redis.IncrVideoField(ctx, comment.VideoId, "comment_count", 1)
 	}
 	return nil
 }
