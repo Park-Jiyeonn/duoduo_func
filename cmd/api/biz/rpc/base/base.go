@@ -22,7 +22,6 @@ func InitBase() {
 	if err != nil {
 		panic(err)
 	}
-
 	//创建一个新的 OpenTelemetry 提供程序，用于生成跟踪和度量数据。
 	provider.NewOpenTelemetryProvider(
 		provider.WithServiceName(consts.ApiServiceName),

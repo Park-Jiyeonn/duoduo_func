@@ -20,7 +20,7 @@ const (
 	SocialServiceAddr   = ":9002"
 
 	ExportEndpoint = ":4317"
-	ETCDAddress    = "127.0.0.1:2379"
+	ETCDAddress    = "localhost:2379"
 
 	ExchangeName = "comments_exchange"
 )
