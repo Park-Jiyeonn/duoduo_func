@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"golang.org/x/crypto/bcrypt"
-	"os"
 	"simple_tiktok/dal/db"
 	"simple_tiktok/dal/db/model"
 	"simple_tiktok/dal/redis"
 	base "simple_tiktok/kitex_gen/base"
 	"simple_tiktok/pkg/errno"
-	util "simple_tiktok/util/ffmpeg"
+	"simple_tiktok/pkg/mq"
 	"simple_tiktok/util/jwt"
 	"strconv"
 	"time"
@@ -250,18 +249,24 @@ func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.Publi
 	VideoPath := request.Title + ".mp4"
 	CoverPath := request.Title + ".jpg"
 
-	//这里也需要保存到本地，路径那也是相对于当前的程序的
-	if err = util.Cover("../../data/"+VideoPath, "../../data/"+CoverPath); err != nil {
-		resp.StatusCode = 1
-		str, _ := os.Getwd()
-		return resp, errno.NewErrNo("获取视频封面失败，当前程序路径" + str)
-	}
-	// 执行数据库事务
-	err = db.CreateVideo(ctx, VideoPath, CoverPath, request.Title, request.UserId)
+	err = mq.Produce(request.UserId, VideoPath, CoverPath)
+	go mq.Consume(ctx)
 	if err != nil {
 		resp.StatusCode = 1
-		return resp, errno.NewErrNo("数据库寄寄")
+		return nil, err
 	}
+	////这里也需要保存到本地，路径那也是相对于当前的程序的
+	//if err = util.Cover("../../data/"+VideoPath, "../../data/"+CoverPath); err != nil {
+	//	resp.StatusCode = 1
+	//	str, _ := os.Getwd()
+	//	return resp, errno.NewErrNo("获取视频封面失败，当前程序路径" + str)
+	//}
+	//// 执行数据库事务
+	//err = db.CreateVideo(ctx, VideoPath, CoverPath, request.Title, request.UserId)
+	//if err != nil {
+	//	resp.StatusCode = 1
+	//	return resp, errno.NewErrNo("数据库寄寄")
+	//}
 
 	resp.StatusCode = 0
 	message = "success"

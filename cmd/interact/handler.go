@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"simple_tiktok/cmd/interact/mq"
 	"simple_tiktok/dal/db"
 	"simple_tiktok/dal/db/model"
 	"simple_tiktok/dal/redis"
 	"simple_tiktok/kitex_gen/base"
 	interact "simple_tiktok/kitex_gen/interact"
 	"simple_tiktok/pkg/errno"
+	"simple_tiktok/pkg/mq"
 	"strconv"
 	"time"
 )
@@ -39,7 +39,6 @@ func (s *InteractServiceImpl) LikeAction(ctx context.Context, req *interact.Like
 			}
 		}
 	}
-	fmt.Println("1--------------------------------------------")
 	if redis.UserIsExists(ctx, *req.UserId) == 0 {
 		user, err := db.GetUserById(ctx, *req.UserId)
 		if err != nil {

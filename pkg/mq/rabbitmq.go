@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/streadway/amqp"
+	"log"
 	"simple_tiktok/dal/db"
 	"simple_tiktok/dal/db/model"
 	"simple_tiktok/dal/redis"
 	"simple_tiktok/pkg/consts"
 	"simple_tiktok/pkg/errno"
+	util "simple_tiktok/util/ffmpeg"
 )
 
-// SendComment 将评论发送到消息队列
 func SendComment(comment *model.Comment) error {
 	// 连接到 RabbitMQ
 	conn, err := amqp.Dial(consts.RabbitMQDSN)
@@ -135,4 +136,129 @@ func ReceiveMessage(ctx context.Context) error {
 		redis.IncrVideoField(ctx, comment.VideoId, "comment_count", 1)
 	}
 	return nil
+}
+
+func Produce(uid int64, title, url string) error {
+	conn, err := amqp.Dial(consts.RabbitMQDSN)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer ch.Close()
+	msg := model.Video{
+		UserId:   uid,
+		Title:    title,
+		CoverUrl: url,
+	}
+	videoJSON, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	err = ch.ExchangeDeclare(
+		consts.ExchangeName,
+		"fanout",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	err = ch.Publish(
+		consts.ExchangeName,
+		consts.ExchangeName,
+		false,
+		false,
+		amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			Body:         videoJSON,
+		})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func Consume(ctx context.Context) {
+	conn, err := amqp.Dial(consts.RabbitMQDSN)
+	if err != nil {
+		log.Println(err)
+	}
+	defer conn.Close()
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Println(err)
+	}
+	defer ch.Close()
+
+	queue, err := ch.QueueDeclare(
+		consts.ExchangeName,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Println(err)
+	}
+	err = ch.QueueBind(
+		queue.Name,
+		"upload",
+		consts.ExchangeName,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Println(err)
+	}
+	msgs, err := ch.Consume(
+		queue.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Println(err)
+	}
+	for msg := range msgs {
+		err = msg.Ack(true)
+		if err != nil {
+			log.Println(err)
+		}
+		go func(msg amqp.Delivery) {
+			videoJSON := msg.Body
+			var publishInfo model.Video
+			err := json.Unmarshal(videoJSON, &model.Video{})
+			if err != nil {
+				log.Println(err)
+			}
+			err = util.Cover(publishInfo.PlayUrl, publishInfo.CoverUrl)
+			if err != nil {
+				err = Produce(publishInfo.UserId, publishInfo.Title, publishInfo.PlayUrl)
+				if err != nil {
+					log.Println(err)
+				}
+				return
+			}
+			err = db.CreateVideo(ctx, publishInfo.PlayUrl, publishInfo.CoverUrl, publishInfo.Title, publishInfo.UserId)
+			if err != nil {
+				err = Produce(publishInfo.UserId, publishInfo.Title, publishInfo.PlayUrl)
+				if err != nil {
+					log.Println(err)
+				}
+				return
+			}
+		}(msg)
+	}
 }

@@ -4,7 +4,6 @@ package base
 
 import (
 	"context"
-	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	ModelBase "simple_tiktok/cmd/api/biz/model/base"
@@ -166,10 +165,6 @@ func PublishAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	fmt.Println("===============================")
-	fmt.Println(c.Get("userid"))
-	fmt.Println(c.Get("username"))
-	fmt.Println("===============================")
 	userID, _ := c.Get("userid")
 	userName, _ := c.Get("username")
 	resp, err = RpcBase.PublishAction(ctx, &base.PublishRequest{
