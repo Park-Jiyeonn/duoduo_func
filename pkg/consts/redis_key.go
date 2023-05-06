@@ -44,3 +44,7 @@ func GetIDFromVideoMsgKey(key string) (id int64) {
 	id, _ = strconv.ParseInt(key[14:], 10, 64)
 	return
 }
+
+func GetFavoriteLmtKey(ipaddr string) string {
+	return "favorite_limit_" + ipaddr
+}

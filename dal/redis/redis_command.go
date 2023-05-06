@@ -2,10 +2,44 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 )
+
+// ========通用操作==========
 
 func Exists(ctx context.Context, key ...string) int64 {
 	return Rs.Exists(ctx, key...).Val()
+}
+
+// =======String操作==============
+
+func Set(ctx context.Context, key string, value interface{}, expiration time.Duration) (ok bool) {
+	if value == nil {
+		return false
+	}
+	bs, err := json.Marshal(value)
+	if err != nil {
+		//Log.Warnf("marshal value err: %v", err)
+		return false
+	}
+	if expiration == 0 {
+		expiration = time.Hour
+	}
+	if status := Rs.Set(ctx, key, bs, expiration); status.Err() != nil {
+		//Log.Errorf("set %v to redis err: %v", key, status.Err())
+		return false
+	}
+	return true
+}
+
+func Incr(ctx context.Context, key string) (cnt int64, err error) {
+	cnt, err = Rs.Incr(ctx, key).Result()
+	if err != nil {
+		//Log.Warnf("Incr %v redis err: %v", key, err)
+		return
+	}
+	return
 }
 
 // ==========Hash操作============

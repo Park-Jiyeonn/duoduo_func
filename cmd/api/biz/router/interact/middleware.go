@@ -55,7 +55,7 @@ func _action0Mw() []app.HandlerFunc {
 
 func _like_ctionMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{mw.IPLimitMiddleware()}
 }
 
 func _list0Mw() []app.HandlerFunc {

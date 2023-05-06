@@ -10,13 +10,13 @@
 sudo lsof -i tcp:8888 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 查找占用9000端口的进程并杀死
-sudo lsof -i tcp:9000 | awk 'NR!=1 {print $2}' | xargs sudo kill
+sudo lsof -i tcp:10086 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 查找占用9001端口的进程并杀死
-sudo lsof -i tcp:9001 | awk 'NR!=1 {print $2}' | xargs sudo kill
+sudo lsof -i tcp:10087 | awk 'NR!=1 {print $2}' | xargs sudo kill
 
 # 查找占用9002端口的进程并杀死
-sudo lsof -i tcp:9002 | awk 'NR!=1 {print $2}' | xargs sudo kill
+sudo lsof -i tcp:10088 | awk 'NR!=1 {print $2}' | xargs sudo kill
 #kill $(pidof api)
 #kill $(pidof base)
 #kill $(pidof interact)

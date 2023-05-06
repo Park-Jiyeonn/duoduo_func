@@ -15,12 +15,14 @@ const (
 
 	TCP = "tcp"
 
-	BaseServiceAddr     = ":9000"
-	InteractServiceAddr = ":9001"
-	SocialServiceAddr   = ":9002"
+	BaseServiceAddr     = ":10086"
+	InteractServiceAddr = ":10087"
+	SocialServiceAddr   = ":10088"
 
 	ExportEndpoint = ":4317"
 	ETCDAddress    = "localhost:2379"
 
 	ExchangeName = "comments_exchange"
+
+	Limits_per_sec = 20
 )
