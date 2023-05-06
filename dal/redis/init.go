@@ -23,5 +23,5 @@ func InitRedis() {
 
 	s := gocron.NewScheduler(time.Local)
 	_, _ = s.Every(5).Minutes().Do(SyncDataToDB)
-	s.StartBlocking()
+	//s.StartBlocking()
 }

@@ -28,7 +28,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/chenzhuoyu/iasm v0.0.0-20220818063314-28c361dae733 // indirect
-	github.com/choleraehyq/pid v0.0.15 // indirect
+	github.com/choleraehyq/pid v0.0.16 // indirect
 	github.com/cloudwego/fastpb v0.0.3 // indirect
 	github.com/cloudwego/frugal v0.1.3 // indirect
 	github.com/cloudwego/netpoll v0.3.1 // indirect
