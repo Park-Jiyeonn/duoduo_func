@@ -22,7 +22,8 @@ const (
 	ExportEndpoint = ":4317"
 	ETCDAddress    = "localhost:2379"
 
-	ExchangeName = "comments_exchange"
+	CommentExchange = "comments_exchange"
+	VideoExchange   = "video_exchange"
 
 	Limits_per_sec = 20
 )

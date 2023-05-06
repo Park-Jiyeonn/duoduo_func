@@ -249,7 +249,7 @@ func (s *BaseServiceImpl) PublishAction(ctx context.Context, request *base.Publi
 	VideoPath := request.Title + ".mp4"
 	CoverPath := request.Title + ".jpg"
 
-	err = mq.Produce(request.UserId, VideoPath, CoverPath)
+	err = mq.Produce(request.UserId, "../../data/"+VideoPath, "../../data/"+CoverPath)
 	go mq.Consume(ctx)
 	if err != nil {
 		resp.StatusCode = 1

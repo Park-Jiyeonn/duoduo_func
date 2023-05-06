@@ -10,6 +10,9 @@ import (
 var Rs *redis.Client
 
 func InitRedis() {
+	if Rs != nil {
+		return
+	}
 	Rs = redis.NewClient(&redis.Options{
 		Addr:     "localhost:5070",
 		Password: "",

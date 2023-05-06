@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,7 +13,6 @@ func getVideoKeyframe(videoPath string) ([]byte, error) {
 		return nil, err
 	}
 	defer os.RemoveAll(tempDir)
-
 	// 使用 FFmpeg 提取关键帧
 	imagePath := filepath.Join(tempDir, "cover.jpg")
 	cmd := exec.Command("ffmpeg", "-ss", "00:00:00.5", "-i", videoPath, "-vframes", "1", "-q:v", "2", imagePath)
@@ -34,9 +32,6 @@ func Cover(videoPath, imagePath string) error {
 	// 获取视频关键帧
 	keyframe, err := getVideoKeyframe(videoPath)
 	if err != nil {
-		fmt.Println("======================================================")
-		fmt.Println(err)
-		fmt.Println("======================================================")
 		return err
 	}
 	// 将关键帧保存为图片
@@ -49,9 +44,6 @@ func Cover(videoPath, imagePath string) error {
 	//
 	//因此，0644表示这个文件的权限为 -rw-r--r--，即文件所有者可以读写，文件所属组和其他用户可以读取，但不能写入或执行。
 	if err != nil {
-		fmt.Println("======================================================")
-		fmt.Println(err)
-		fmt.Println("======================================================")
 		return err
 	}
 	return nil

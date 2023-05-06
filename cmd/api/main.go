@@ -5,11 +5,13 @@ package main
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"simple_tiktok/cmd/api/biz/rpc"
+	"simple_tiktok/dal"
 )
 
 func main() {
 	h := server.Default()
 	rpc.Init()
+	dal.Init()
 	h.Static("/data/", "../..")
 	register(h)
 	h.Spin()

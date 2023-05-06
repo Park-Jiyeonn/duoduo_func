@@ -14,6 +14,9 @@ import (
 var DB *gorm.DB
 
 func Init() {
+	if DB != nil {
+		return
+	}
 	var err error
 	gormlogrus := logger.New(
 		logrus.NewWriter(),
