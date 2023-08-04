@@ -1,8 +1,8 @@
 package dal
 
 import (
-	"simple_tiktok/dal/db"
-	"simple_tiktok/dal/redis"
+	"duoduo_fun/dal/db"
+	"duoduo_fun/dal/redis"
 )
 
 func Init() {

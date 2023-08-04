@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"simple_tiktok/pkg/consts"
+	"duoduo_fun/pkg/consts"
 	"strconv"
 )
 

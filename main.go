@@ -1,16 +1,14 @@
 package main
 
 import (
-	"log"
-	base "simple_tiktok/kitex_gen/base/baseservice"
+	"duoduo_fun/api/router"
+	"duoduo_fun/dal"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	svr := base.NewServer(new(BaseServiceImpl))
-
-	err := svr.Run()
-
-	if err != nil {
-		log.Println(err.Error())
-	}
+	dal.Init()
+	r := new(gin.Engine)
+	router.Register(r)
+	r.Run(":11451")
 }

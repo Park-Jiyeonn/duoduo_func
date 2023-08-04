@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
+	"duoduo_fun/dal/db/model"
 	"fmt"
 	"gorm.io/gorm"
-	"simple_tiktok/dal/db/model"
 )
 
 func CreateVideo(ctx context.Context, playUrl string, coverUrl string, title string, uid int64) (err error) {

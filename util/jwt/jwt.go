@@ -1,8 +1,8 @@
 package jwt
 
 import (
+	"duoduo_fun/pkg/errno"
 	"errors"
-	"simple_tiktok/pkg/errno"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -16,13 +16,13 @@ var mySecret = []byte("Jiyeon_Hyomin_Jiyeon_Hyomin_hhhh")
 // 如果想要保存更多信息，都可以添加到这个结构体中
 type MyClaims struct {
 	// 可根据需要自行添加字段
-	UserID               int64  `json:"user_id"`
+	UserID               int    `json:"user_id"`
 	Username             string `json:"username"`
 	jwt.RegisteredClaims        // 内嵌标准的声明
 }
 
 // GenToken 生成JWT
-func GenToken(userid int64, username string) (aToken string, err error) {
+func GenToken(userid int, username string) (aToken string, err error) {
 	// 实例化一个我们带创建的加密声明
 	aclaims := MyClaims{
 		// 自定义字段

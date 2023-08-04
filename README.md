@@ -1,1 +1,0 @@
-# my simple_tiktok

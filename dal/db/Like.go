@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
+	"duoduo_fun/dal/db/model"
 	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"simple_tiktok/dal/db/model"
 )
 
 func GetUserLikeRecords(ctx context.Context, uid int64) ([]int64, error) {

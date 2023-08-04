@@ -2,8 +2,8 @@ package redis
 
 import (
 	"context"
-	"simple_tiktok/dal/db/model"
-	"simple_tiktok/pkg/consts"
+	"duoduo_fun/dal/db/model"
+	"duoduo_fun/pkg/consts"
 	"strconv"
 )
 

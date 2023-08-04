@@ -2,8 +2,8 @@ package redis
 
 import (
 	"context"
-	"simple_tiktok/dal/db"
-	"simple_tiktok/pkg/consts"
+	"duoduo_fun/dal/db"
+	"duoduo_fun/pkg/consts"
 	"strconv"
 )
 
@@ -11,7 +11,6 @@ func SyncDataToDB() {
 	ctx := context.Background()
 	go UpdateUserMsgToDB(ctx)
 	go UpdateUserLikeListToDB(ctx)
-	go UpdateUserFollowListToDB(ctx)
 	go UpdateVideoMsgToDB(ctx)
 }
 
@@ -35,7 +34,7 @@ func UpdateUserMsgToDB(ctx context.Context) {
 			"work_count":     user.WorkCount,
 			"favorite_count": user.FavoriteCount,
 		}
-		err = db.UpdateUser(ctx, uid, &userMap)
+		err = db.UpdateUser(uid, &userMap)
 		if err != nil {
 			continue
 		}
@@ -61,34 +60,6 @@ func UpdateUserLikeListToDB(ctx context.Context) {
 			err = db.UpdateAndInsertLikeRecord(ctx,
 				uid,
 				vid,
-				action == 1,
-			)
-			if err != nil {
-				continue
-			}
-		}
-	}
-	return
-}
-
-func UpdateUserFollowListToDB(ctx context.Context) {
-	var cursor uint64
-	keys, _, err := Rs.Scan(ctx, cursor, "user_follow_list*", 0).Result()
-	if err != nil {
-		return
-	}
-	for _, key := range keys {
-		uid := consts.GetIDFromUserFollowListKey(key)
-		list := GetFollowFullList(ctx, uid)
-		for k, v := range list {
-			uid2, err := strconv.ParseInt(k, 10, 64) //nolint: staticcheck
-			action, err := strconv.ParseInt(v, 10, 64)
-			if err != nil {
-				continue
-			}
-			err = db.UpdateAndInsertRelation(ctx,
-				uid,
-				uid2,
 				action == 1,
 			)
 			if err != nil {

@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
+	"duoduo_fun/dal/db/model"
 	"errors"
 	"gorm.io/gorm"
-	"simple_tiktok/dal/db/model"
 )
 
 func GetCommentList(ctx context.Context, vid int64) ([]model.Comment, error) {
