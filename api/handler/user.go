@@ -1,8 +1,11 @@
 package handler
 
 import (
-	"duoduo_fun/api/model"
+	"context"
+	api_model "duoduo_fun/api/model"
 	"duoduo_fun/dal/db"
+	"duoduo_fun/dal/db/model"
+	"duoduo_fun/dal/redis"
 	"duoduo_fun/pkg/errno"
 	"duoduo_fun/util/jwt"
 	"github.com/gin-gonic/gin"
@@ -11,12 +14,12 @@ import (
 )
 
 func UserRegister(c *gin.Context) {
-	req := &model.User{}
+	req := &api_model.User{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	resp := new(model.RegisterResponse)
+	resp := new(api_model.RegisterResponse)
 	user, err := db.GetUserByName(req.Username)
 	if user != nil {
 		resp.StatusCode = 1
@@ -45,8 +48,8 @@ func UserRegister(c *gin.Context) {
 	resp.Token = token
 }
 
-func userLogin(req *model.User) (resp *model.LoginResponse, err error) {
-	resp = new(model.LoginResponse)
+func userLogin(req *api_model.User) (resp *api_model.LoginResponse, err error) {
+	resp = new(api_model.LoginResponse)
 	user, err := db.GetUserByName(req.Username)
 	if err != nil {
 		resp.StatusCode = 1
@@ -75,12 +78,54 @@ func userLogin(req *model.User) (resp *model.LoginResponse, err error) {
 	return resp, nil
 }
 func UserLogin(c *gin.Context) {
-	req := &model.User{}
+	req := &api_model.User{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 	resp, err := userLogin(req)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func getUserInfo(ctx context.Context, req *api_model.UserInfoRequest) (resp *api_model.UserInfoResponse, err error) {
+	var user *model.User
+	if redis.UserIsExists(ctx, req.UserId) != 0 {
+		user, err = redis.GetUserInfo(ctx, req.UserId)
+		resp.StatusCode = 1
+		if err != nil {
+			return resp, err
+		}
+	} else {
+		user, err = db.GetUserById(ctx, req.UserId)
+		if err != nil {
+			resp.StatusCode = 1
+			return resp, errno.NewErrNo("数据库查询失败")
+		}
+
+		//	数据库查询成功后，需要将信息写入缓存
+		redis.SetUserInfo(ctx, user)
+	}
+
+	resp.StatusCode = 200
+	resp.StatusMsg = "请求成功"
+	resp.User = api_model.UserInfo{
+		Id:   int(user.ID),
+		Name: user.Name,
+	}
+	return resp, nil
+}
+func GetUserInfo(c *gin.Context) {
+	req := &api_model.UserInfoRequest{}
+	err := c.BindJSON(req)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	resp, err := getUserInfo(context.Background(), req)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return

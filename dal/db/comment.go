@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetCommentList(ctx context.Context, vid int64) ([]model.Comment, error) {
+func GetCommentList(ctx context.Context, vid int) ([]model.Comment, error) {
 	res := make([]model.Comment, 0)
 	err := DB.WithContext(ctx).
 		Model(model.Comment{}).
@@ -26,7 +26,7 @@ func CreateComment(ctx context.Context, comment *model.Comment) error {
 		Create(comment).Error
 }
 
-func DeleteCommentByID(ctx context.Context, id int64) error {
+func DeleteCommentByID(ctx context.Context, id int) error {
 	return DB.WithContext(ctx).Model(&model.Comment{}).
 		Where("id = ?", id).
 		Delete(nil).Error

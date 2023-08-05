@@ -22,7 +22,7 @@ func CreateUser(username, password string) (int, error) {
 	return int(user.ID), nil
 }
 
-func GetUserById(ctx context.Context, userId int64) (*model.User, error) {
+func GetUserById(ctx context.Context, userId int) (*model.User, error) {
 	var user model.User
 	err := DB.WithContext(ctx).Model(model.User{}).Where("id = ?", userId).First(&user).Error
 	if err != nil {

@@ -8,8 +8,8 @@ const TableNameComment = "comment"
 
 type Comment struct {
 	gorm.Model
-	UserId      int64  `json:"user_id" gorm:"index:idx_comment_user_id"`
-	VideoId     int64  `json:"video_id"`
+	UserId      int    `json:"user_id" gorm:"index:idx_comment_user_id"`
+	VideoId     int    `json:"video_id"`
 	Content     string `json:"content"`
 	PublishDate string `json:"publish_date"`
 }

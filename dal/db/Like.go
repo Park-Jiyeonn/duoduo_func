@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetUserLikeRecords(ctx context.Context, uid int64) ([]int64, error) {
-	var likeVideoIds []int64
+func GetUserLikeRecords(ctx context.Context, uid int) ([]int, error) {
+	var likeVideoIds []int
 	err := DB.WithContext(ctx).Model(model.Like{}).
 		Select("video_id").
 		Where("user_id = ? AND action=1", uid).
@@ -23,7 +23,7 @@ func GetUserLikeRecords(ctx context.Context, uid int64) ([]int64, error) {
 	return likeVideoIds, nil
 }
 
-func HasLiked(ctx context.Context, uid, vid int64) (bool, error) {
+func HasLiked(ctx context.Context, uid, vid int) (bool, error) {
 	var ret bool
 	err := DB.WithContext(ctx).Model(model.Like{}).
 		Select("action").

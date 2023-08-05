@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func GetUserInfoKey(userId int64) string {
+func GetUserInfoKey(userId int) string {
 	return fmt.Sprintf("user_info_%d", userId)
 }
 
@@ -17,11 +17,11 @@ func GetUserFollowerListKey(userID int64) string {
 	return fmt.Sprintf("user_follower_list_%d", userID)
 }
 
-func GetUserLikeListKey(userID int64) string {
+func GetUserLikeListKey(userID int) string {
 	return fmt.Sprintf("user_like_list_%d", userID)
 }
 
-func GetVideoMsgKey(videoID int64) string {
+func GetVideoMsgKey(videoID int) string {
 	return fmt.Sprintf("video_message_%d", videoID)
 }
 

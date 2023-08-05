@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateVideo(ctx context.Context, playUrl string, coverUrl string, title string, uid int64) (err error) {
+func CreateVideo(ctx context.Context, playUrl string, coverUrl string, title string, uid int) (err error) {
 	video := &model.Video{
 		Title:    title,
 		PlayUrl:  playUrl,
@@ -45,7 +45,7 @@ func MGetByTime(ctx context.Context, latestTime int64) ([]model.Video, error) {
 	return videos, nil
 }
 
-func GetVideoByVideoId(ctx context.Context, vid int64) (*model.Video, error) {
+func GetVideoByVideoId(ctx context.Context, vid int) (*model.Video, error) {
 	var video *model.Video
 	err := DB.WithContext(ctx).Model(model.Video{}).Where("id = ?", vid).First(&video).Error
 	if err != nil {
