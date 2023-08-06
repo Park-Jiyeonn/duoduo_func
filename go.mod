@@ -3,6 +3,7 @@ module duoduo_fun
 go 1.20
 
 require (
+	github.com/Park-Jiyeonn/coreRPC v0.0.0-20230806123244-1f246c14b6d5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/redis/go-redis/v9 v9.0.4

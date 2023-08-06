@@ -22,15 +22,13 @@ func UpdateUserMsgToDB(ctx context.Context) {
 	}
 	for _, key := range keys {
 		uid := consts.GetIDFromUserMsgKey(key)
-		user, err := GetUserInfo(ctx, uid)
+		user, err := GetUserInfo(ctx, int(uid))
 		if err != nil {
 			continue
 		}
 		userMap := map[string]interface{}{
 			"id":             user.ID,
 			"name":           user.Name,
-			"follow_count":   user.FollowCount,
-			"follower_count": user.FollowerCount,
 			"work_count":     user.WorkCount,
 			"favorite_count": user.FavoriteCount,
 		}
@@ -50,7 +48,7 @@ func UpdateUserLikeListToDB(ctx context.Context) {
 	}
 	for _, key := range keys {
 		uid := consts.GetIDFromUserLikeListKey(key)
-		list := GetFavoriteList(ctx, uid)
+		list := GetFavoriteList(ctx, int(uid))
 		for k, v := range list {
 			vid, err := strconv.ParseInt(k, 10, 64) //nolint: staticcheck
 			action, err := strconv.ParseInt(v, 10, 64)
@@ -78,7 +76,7 @@ func UpdateVideoMsgToDB(ctx context.Context) {
 	}
 	for _, key := range keys {
 		vid := consts.GetIDFromVideoMsgKey(key)
-		video, err := GetVideoMessage(ctx, vid)
+		video, err := GetVideoMessage(ctx, int(vid))
 		if err != nil {
 			continue
 		}

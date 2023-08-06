@@ -1,3 +1,7 @@
+github.com/Park-Jiyeonn/coreRPC v0.0.0-20230806115546-e1108342f347 h1:S1pmUfmmjndYA3WiZIScCdca75SxVcS0lwb3SyEITDs=
+github.com/Park-Jiyeonn/coreRPC v0.0.0-20230806115546-e1108342f347/go.mod h1:6vz2dQHTm+za5bFpJKF61Rbf4tCUoLmqw09VRVSDrVM=
+github.com/Park-Jiyeonn/coreRPC v0.0.0-20230806123244-1f246c14b6d5 h1:3UPb1z0pAgHBNwoax0Gv0q7mwbcTZXWQI5ML1OtrjqM=
+github.com/Park-Jiyeonn/coreRPC v0.0.0-20230806123244-1f246c14b6d5/go.mod h1:6vz2dQHTm+za5bFpJKF61Rbf4tCUoLmqw09VRVSDrVM=
 github.com/bsm/ginkgo/v2 v2.7.0 h1:ItPMPH90RbmZJt5GtkcNvIRuGEdwlBItdNVoyzaNQao=
 github.com/bsm/gomega v1.26.0 h1:LhQm+AFcgV2M0WyKroMASzAzCAJVpAxQXv4SaI9a69Y=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=

@@ -20,7 +20,7 @@ type LoginResponse struct {
 }
 
 type UserInfoRequest struct {
-	UserId   int64  `json:"user_id"`
+	UserId   int    `json:"user_id"`
 	Token    string `json:"token"`
 	Username string `json:"username"`
 }
@@ -31,7 +31,7 @@ type UserInfo struct {
 }
 
 type UserInfoResponse struct {
-	StatusCode int64    `json:"status_code"`
+	StatusCode int      `json:"status_code"`
 	StatusMsg  string   `json:"status_msg,omitempty"`
 	User       UserInfo `json:"user,omitempty"`
 }

@@ -5,7 +5,7 @@ services:
     ports:
       - "3307:3306"
     environment:
-      - MYSQL_DATABASE=tiktok
+      - MYSQL_DATABASE=duoduo_fun
       - MYSQL_USER=jiyeon
       - MYSQL_PASSWORD=1234
       - MYSQL_RANDOM_ROOT_PASSWORD="yes"
